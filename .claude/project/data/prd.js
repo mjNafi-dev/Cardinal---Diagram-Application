@@ -28,7 +28,7 @@ window.HUB_DATA["prd"] = /*DATA*/
     },
     {
       "heading": "Roadmap",
-      "body": "Next, in order: **canvas comfort** (minimap, alignment guides, manual waypoints, templates) · **Chen → SQL** · **circuit polish** (junction dots, rotate/flip parts) · **bigger circuit stuff** (expression → circuit, K-maps, flip-flops, clock, mux, 7-segment, custom chips)."
+      "body": "Public roadmap: `ROADMAP.md` in the repo root. In order: **flowchart mode** (own diagram type, Yes/No decision labels, top-to-bottom tidy-up, examples) · **canvas comfort** (minimap, alignment guides, manual waypoints, templates) · **Chen → SQL** · **circuit polish** (junction dots, rotate/flip parts) · **bigger circuit stuff** (expression → circuit, K-maps, flip-flops, clock, mux, 7-segment, custom chips)."
     }
   ]
 }

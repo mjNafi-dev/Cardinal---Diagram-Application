@@ -37,13 +37,13 @@ window.HUB_DATA["checklist"] = /*DATA*/
         },
         {
           "text": "Publish the repo from GitHub Desktop (Publish repository) so the README links and releases work",
-          "status": "todo",
-          "detail": "The folder has no GitHub remote yet."
+          "status": "done",
+          "detail": "github.com/mjNafi-dev/Cardinal---Diagram-Application"
         },
         {
           "text": "Push tag v0.2.0 and check the Release has Cardinal-Windows-Setup.exe and Cardinal-macOS.dmg",
-          "status": "todo",
-          "detail": "Steps are in the session notes / README."
+          "status": "done",
+          "detail": "Released 2026-10-18: Windows setup 2.1 MB, Mac dmg 4.9 MB."
         },
         {
           "text": "Paste the About description and topics into the GitHub repo page",
@@ -64,6 +64,11 @@ window.HUB_DATA["checklist"] = /*DATA*/
     {
       "title": "Phase 2 / future",
       "items": [
+        {
+          "text": "Flowchart mode: own diagram type, Yes/No decision labels, top-to-bottom tidy-up, starter examples",
+          "status": "todo",
+          "detail": "Roadmap #1 (user wants it, 2026-10-19). Shapes already exist in the library."
+        },
         {
           "text": "Minimap",
           "status": "todo",

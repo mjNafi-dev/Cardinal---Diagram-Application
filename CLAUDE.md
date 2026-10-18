@@ -64,7 +64,7 @@ These mirror `.claude/project/data/rules.js`. If the user edits rules in the hub
 - **Things the user needs to SEE** (visual references, dashboards): an HTML page following the hub pattern — page in `.claude/project/` or `.claude/creative/`, data in a sibling `data/*.js` file with the `/*DATA*/.../*END*/` contract, wired to `sync-engine.js`. Add a link/mention in the hub if it's central.
 - **SVG icons**: user drops them in `.claude/creative/icons/`; you take them from there into the app.
 - **App code**: only inside the app folder. If the framework can't share one codebase across OSes, make per-OS subfolders inside the app folder.
-- Never scatter loose files at the pack root (exceptions: `CLAUDE.md`, `README.md`, `build.bat`, git files; `docs/` holds README screenshots; `.github/` holds the release workflow).
+- Never scatter loose files at the pack root (exceptions: `CLAUDE.md`, `README.md`, `ROADMAP.md` (public roadmap, keep it in sync with checklist Phase 2), `build.bat`, git files; `docs/` holds README screenshots; `.github/` holds the release workflow).
 
 ## Versioning
 

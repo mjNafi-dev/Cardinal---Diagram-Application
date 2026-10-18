@@ -157,12 +157,13 @@ Ratios work too: `1:1`, `1:N`, `M:N`.
 
 ## What's next
 
-Things I'd like to add, roughly in this order:
+Things I'd like to add, roughly in this order (the full list with details is in **[ROADMAP.md](ROADMAP.md)**):
 
-1. **Canvas comfort**: a minimap, alignment guides while dragging, manual waypoints on lines, and a templates gallery
-2. **Chen → SQL**: turn a Chen / EER diagram into tables so it can export SQL too
-3. **Circuit polish**: junction dots and shared wires when one output feeds several inputs, plus rotating and flipping parts
-4. **Bigger circuit stuff**: expression → circuit, K-maps, flip-flops, a clock, multiplexers, 7-segment displays and custom chips
+1. **Flowchart mode**: flowcharts as their own diagram type, with Yes/No labels on decisions, top-to-bottom tidy-up and starter examples
+2. **Canvas comfort**: a minimap, alignment guides while dragging, manual waypoints on lines, and a templates gallery
+3. **Chen → SQL**: turn a Chen / EER diagram into tables so it can export SQL too
+4. **Circuit polish**: junction dots and shared wires when one output feeds several inputs, plus rotating and flipping parts
+5. **Bigger circuit stuff**: expression → circuit, K-maps, flip-flops, a clock, multiplexers, 7-segment displays and custom chips
 
 Got an idea or found a bug? [Open an issue](../../issues).
 

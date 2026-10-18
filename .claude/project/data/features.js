@@ -179,6 +179,56 @@ window.HUB_DATA["features"] = /*DATA*/
       ]
     },
     {
+      "title": "Flowcharts",
+      "rows": [
+        {
+          "name": "Flowchart shapes (start/end, process, decision, data, document…) in the library",
+          "tier": "free",
+          "status": {
+            "Windows": "done",
+            "macOS": "done"
+          },
+          "notes": ""
+        },
+        {
+          "name": "Flowchart as its own diagram type in New diagram",
+          "tier": "free",
+          "status": {
+            "Windows": "todo",
+            "macOS": "todo"
+          },
+          "notes": "Roadmap #1"
+        },
+        {
+          "name": "Yes / No labels on decision branches",
+          "tier": "free",
+          "status": {
+            "Windows": "todo",
+            "macOS": "todo"
+          },
+          "notes": "Roadmap #1"
+        },
+        {
+          "name": "Top-to-bottom Tidy up for flowcharts",
+          "tier": "free",
+          "status": {
+            "Windows": "todo",
+            "macOS": "todo"
+          },
+          "notes": "Roadmap #1"
+        },
+        {
+          "name": "Flowchart starter examples (if/else, loop)",
+          "tier": "free",
+          "status": {
+            "Windows": "todo",
+            "macOS": "todo"
+          },
+          "notes": "Roadmap #1"
+        }
+      ]
+    },
+    {
       "title": "Connections",
       "rows": [
         {
