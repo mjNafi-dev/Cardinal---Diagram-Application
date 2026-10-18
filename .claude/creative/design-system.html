@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardinal · Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="data/design-tokens.js"></script>
+<script src="../shared/sync-engine.js"></script>
+<style>
+  /* Restyled for Cardinal (cardinal red, Inter / JetBrains Mono). */
+  :root {
+    --bg:#F3F4F6; --surface:#ffffff; --surface-2:#EEF0F3;
+    --border:#E3E5E9; --border-strong:#CBD0D6;
+    --text:#1B1D21; --dim:#5B616B; --faint:#8A919B;
+    --accent:#D7263D; --accent-fg:#ffffff;
+    --ok:#2E7D4F; --warn:#A8760A; --bad:#B3382C;
+    --warn-bg:rgba(168,118,10,.12); --bad-bg:rgba(179,56,44,.10);
+    --shadow:0 4px 20px rgba(0,0,0,.08);
+  }
+  [data-theme="dark"] {
+    --bg:#111214; --surface:#191B1F; --surface-2:#262931;
+    --border:#2A2D33; --border-strong:#3A3E46;
+    --text:#E8EAED; --dim:#A3A9B2; --faint:#737A84;
+    --accent:#EE4A5F; --accent-fg:#ffffff;
+    --ok:#5DBB87; --warn:#D9A441; --bad:#E07B6F;
+    --warn-bg:rgba(217,164,65,.12); --bad-bg:rgba(224,123,111,.12);
+    --shadow:0 4px 20px rgba(0,0,0,.45);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter','Segoe UI',system-ui,sans-serif; font-size:14px; line-height:1.5; max-width:960px; margin:0 auto; padding:26px 30px 80px; }
+  h1 { font-size:22px; font-weight:650; }
+  .subtitle { font-size:12.5px; color:var(--dim); margin:2px 0 18px; font-family:'JetBrains Mono',Consolas,monospace; }
+  .topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .top-actions { display:flex; gap:8px; align-items:center; }
+  .btn { background:var(--surface); color:var(--text); border:1px solid var(--border); padding:6px 12px; border-radius:6px; font-size:12.5px; cursor:pointer; font-family:inherit; }
+  .btn:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  .btn.on { background:var(--accent); color:var(--accent-fg); border-color:var(--accent); }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid var(--border); background:var(--surface); }
+  .pill.ok { color:var(--ok); border-color:var(--ok); }
+  .pill.warn { color:var(--warn); border-color:var(--warn); background:var(--warn-bg); }
+  .banner { display:flex; gap:10px; padding:10px 14px; border-radius:6px; margin:10px 0; font-size:13px; border:1px solid var(--warn); background:var(--warn-bg); align-items:flex-start; }
+  .banner .grow { flex:1; }
+  .tabs { display:flex; gap:2px; border-bottom:1px solid var(--border); margin:14px 0 24px; flex-wrap:wrap; }
+  .tab { background:none; border:none; padding:9px 14px; color:var(--dim); font-size:13.5px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; font-family:inherit; }
+  .tab.active { color:var(--text); border-bottom-color:var(--accent); font-weight:600; }
+  .sec { margin-bottom:30px; }
+  .sec-label { font-size:11px; font-weight:650; color:var(--dim); letter-spacing:.08em; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .hint { font-size:11px; color:var(--faint); text-transform:none; letter-spacing:0; font-weight:400; }
+  .grid { display:grid; gap:10px; }
+  .swrow { display:grid; grid-template-columns:repeat(9,1fr); gap:8px; }
+  .chipv { height:38px; border-radius:8px; border:1px solid var(--border); cursor:pointer; position:relative; }
+  .lbl { font-size:10px; text-align:center; color:var(--dim); margin-top:4px; font-family:'JetBrains Mono',Consolas,monospace; }
+  [data-hex]:hover::after { content:attr(data-hex); position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.45); color:#fff; font-size:9.5px; font-family:'JetBrains Mono',Consolas,monospace; border-radius:inherit; }
+  .card { border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface); }
+  .card-name { font-size:12.5px; font-weight:600; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--surface-2); display:flex; justify-content:space-between; align-items:center; }
+  .mode-lbl { font-size:9px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--dim); padding:6px 10px 3px; }
+  .strip { display:flex; height:30px; }
+  .strip > div { flex:1; cursor:pointer; position:relative; }
+  .strip-lbls { display:flex; }
+  .strip-lbls span { flex:1; font-size:8.5px; text-align:center; color:var(--dim); padding:2px 0; }
+  .type-row { display:flex; align-items:baseline; gap:18px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .type-meta { width:210px; flex-shrink:0; }
+  .type-token { font-size:12px; font-weight:500; font-family:'JetBrains Mono',Consolas,monospace; }
+  .type-specs { font-size:11px; color:var(--dim); margin-top:2px; }
+  .type-sample { flex:1; }
+  .sp-item { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .sp-bar { background:var(--accent); height:8px; border-radius:4px; flex-shrink:0; }
+  .sp-lbl { font-size:11.5px; color:var(--dim); font-family:'JetBrains Mono',Consolas,monospace; }
+  .r-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .r-box { height:46px; border:1.5px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--dim); }
+  .elev { padding:13px 16px; border-radius:12px; background:var(--surface); margin-bottom:13px; font-size:13px; }
+  .elev code { font-family:'JetBrains Mono',Consolas,monospace; font-size:11px; color:var(--dim); }
+  #toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%); background:var(--text); color:var(--bg); padding:7px 16px; border-radius:999px; font-size:12px; font-family:'JetBrains Mono',Consolas,monospace; opacity:0; transition:.15s; pointer-events:none; z-index:200; }
+  #toast.show { opacity:1; }
+  /* component previews */
+  .comp-sec { border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:16px; background:var(--surface); }
+  .comp-title { font-size:12px; font-weight:650; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:14px; }
+  .comp-row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+  .c-btn { padding:8px 18px; border-radius:8px; font-size:13.5px; font-weight:500; cursor:pointer; border:1px solid transparent; font-family:inherit; }
+  .c-btn.primary { background:var(--accent); color:var(--accent-fg); }
+  .c-btn.secondary { background:var(--surface); color:var(--text); border-color:var(--border-strong); }
+  .c-btn.ghost { background:transparent; color:var(--accent); }
+  .c-btn.danger { background:var(--bad); color:#fff; }
+  .c-btn:disabled { opacity:.38; cursor:not-allowed; }
+  .c-btn.sm { padding:5px 12px; font-size:12px; }
+  .c-input { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13.5px; font-family:inherit; outline:none; min-width:200px; }
+  .c-input:focus { border-color:var(--accent); }
+  .c-select { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:8px; font-size:13.5px; font-family:inherit; }
+  .c-check { display:inline-flex; align-items:center; gap:8px; font-size:13.5px; cursor:pointer; }
+  .c-toggle { width:40px; height:22px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border-strong); position:relative; cursor:pointer; transition:.15s; }
+  .c-toggle::after { content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--dim); transition:.15s; }
+  .c-toggle.on { background:var(--accent); border-color:var(--accent); }
+  .c-toggle.on::after { left:20px; background:var(--accent-fg); }
+  .c-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 11px; border-radius:999px; font-size:12px; font-weight:500; border:1px solid var(--border); background:var(--surface-2); }
+  .c-chip.acc { color:var(--accent); border-color:var(--accent); background:transparent; }
+  .c-card { border:1px solid var(--border); border-radius:12px; padding:16px; max-width:280px; background:var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+  .c-card h4 { font-size:15px; margin-bottom:4px; }
+  .c-card p { font-size:12.5px; color:var(--dim); margin-bottom:10px; }
+  .c-listrow { display:flex; align-items:center; gap:12px; padding:11px 14px; border:1px solid var(--border); border-radius:10px; max-width:420px; background:var(--surface); }
+  .c-listrow .ic { width:34px; height:34px; border-radius:8px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; }
+  .c-modal-demo { border:1px solid var(--border-strong); border-radius:12px; padding:20px; max-width:340px; box-shadow:var(--shadow); background:var(--surface); }
+  .c-modal-demo h4 { font-size:15px; margin-bottom:6px; }
+  .c-modal-demo p { font-size:12.5px; color:var(--dim); margin-bottom:14px; }
+  .c-empty { text-align:center; padding:26px; border:1.5px dashed var(--border-strong); border-radius:12px; max-width:340px; }
+  .c-empty .big { font-size:26px; margin-bottom:6px; }
+  .c-empty p { font-size:12.5px; color:var(--dim); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><h1 id="dsTitle"><svg width="26" height="26" viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-6px;margin-right:8px"><path d="M33 33 C33 22 40 15 54 10 L50 24 C61 27 67 37 67 50 C67 56 66 60 64 64 L86 78 L81 83 L58 71 C50 75 40 73 35 64 C32 58 32 50 33 43"/><path d="M33 33 L22 38 L33 43"/><path d="M43 49 C53 47 61 53 64 64"/><path d="M47 73 L46 82 M55 73 L55 82"/><path d="M30 82 L66 82"/></svg>Cardinal design system</h1><div class="subtitle" id="dsSub">cardinal red · neutral slate · Inter / JetBrains Mono · light + dark</div></div>
+  <div class="top-actions">
+    <span id="statusPill"></span>
+    <button class="btn" id="connectBtn" style="display:none">Connect project folder</button>
+    <button class="btn" id="editBtn" title="Toggle edit mode — click any swatch/value to change it">✎ Edit</button>
+    <button class="btn" id="themeBtn">🌓</button>
+  </div>
+</div>
+<div id="banners"></div>
+
+<div class="tabs" id="tabs"></div>
+<main id="panel"></main>
+<div id="toast"></div>
+
+<script>
+"use strict";
+let T = JSON.parse(JSON.stringify(window.DS_DATA.tokens));
+let tab = localStorage.getItem("ds_tab") || "colors";
+let editMode = false;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let toastTimer;
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),1600); }
+function applyTheme(){ let t=localStorage.getItem("ds_theme")||"system"; if(t==="system") t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"; document.documentElement.setAttribute("data-theme",t); }
+$("#themeBtn").onclick=()=>{ const c=localStorage.getItem("ds_theme")||"system"; localStorage.setItem("ds_theme", c==="system"?"dark":c==="dark"?"light":"system"); applyTheme(); };
+applyTheme();
+
+function copyHex(hex){
+  const done=()=>toast(hex+" copied");
+  if(navigator.clipboard?.writeText) navigator.clipboard.writeText(hex).then(done).catch(()=>{ fallbackCopy(hex); done(); });
+  else { fallbackCopy(hex); done(); }
+}
+function fallbackCopy(v){ const ta=document.createElement("textarea"); ta.value=v; ta.style.cssText="position:fixed;opacity:0"; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(e){} ta.remove(); }
+
+/* click behavior: normal = copy, edit mode = prompt to change (auto-saves) */
+function hexClick(getter, setter){
+  return (ev)=>{
+    const cur=getter();
+    if(!editMode){ copyHex(cur); return; }
+    const v=prompt("New value:",cur);
+    if(v && v.trim() && v.trim()!==cur){ setter(v.trim()); SyncEngine.touch("tokens"); render(); toast("Updated"); }
+  };
+}
+
+const TABS=[["colors","Colors"],["type","Type scale"],["tokens","Spacing & radius"],["components","Components"]];
+function renderTabs(){
+  $("#tabs").innerHTML=TABS.map(([id,l])=>`<button class="tab ${tab===id?"active":""}" data-t="${id}">${l}</button>`).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ tab=b.dataset.t; localStorage.setItem("ds_tab",tab); renderTabs(); render(); });
+}
+
+function render(){
+  const P=$("#panel"); P.innerHTML="";
+  if(tab==="colors") renderColors(P);
+  else if(tab==="type") renderType(P);
+  else if(tab==="tokens") renderTokens(P);
+  else renderComponents(P);
+}
+
+function sw(hex, getter, setter, extra){ // returns a bound swatch element
+  const d=document.createElement("div");
+  d.setAttribute("data-hex",hex); d.style.background=hex;
+  if(extra) Object.assign(d.style,extra);
+  d.onclick=hexClick(getter,setter);
+  return d;
+}
+
+function renderColors(P){
+  // neutrals
+  const s1=document.createElement("div"); s1.className="sec";
+  s1.innerHTML=`<div class="sec-label">Neutrals <span class="hint">${editMode?"click to edit":"click to copy"}</span></div>`;
+  const row=document.createElement("div"); row.className="swrow";
+  T.neutrals.forEach((n,i)=>{
+    const cell=document.createElement("div");
+    const c=sw(n.hex,()=>T.neutrals[i].hex,v=>T.neutrals[i].hex=v); c.className="chipv";
+    cell.appendChild(c);
+    const l=document.createElement("div"); l.className="lbl"; l.textContent=n.name; cell.appendChild(l);
+    row.appendChild(cell);
+  });
+  s1.appendChild(row); P.appendChild(s1);
+  // accents
+  const s2=document.createElement("div"); s2.className="sec";
+  s2.innerHTML=`<div class="sec-label">Accents — light / dark</div>`;
+  const g=document.createElement("div"); g.className="grid"; g.style.gridTemplateColumns="repeat(auto-fill,minmax(260px,1fr))";
+  T.accents.forEach((a,ai)=>{
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<div class="card-name">${esc(a.name)}</div>`;
+    for(const mode of ["light","dark"]){
+      const ml=document.createElement("div"); ml.className="mode-lbl"; ml.textContent=mode; card.appendChild(ml);
+      const strip=document.createElement("div"); strip.className="strip";
+      for(const k of ["subtle","muted","default","strong","fg"]){
+        strip.appendChild(sw(a[mode][k],()=>T.accents[ai][mode][k],v=>T.accents[ai][mode][k]=v));
+      }
+      card.appendChild(strip);
+      const lbls=document.createElement("div"); lbls.className="strip-lbls"; lbls.innerHTML="<span>subtle</span><span>muted</span><span>default</span><span>strong</span><span>fg</span>";
+      card.appendChild(lbls);
+    }
+    g.appendChild(card);
+  });
+  s2.appendChild(g); P.appendChild(s2);
+  // semantic
+  const s3=document.createElement("div"); s3.className="sec";
+  s3.innerHTML=`<div class="sec-label">Semantic <span class="hint">vivid light/dark · subtle bg light/dark</span></div>`;
+  const sg=document.createElement("div"); sg.className="grid"; sg.style.gridTemplateColumns="repeat(auto-fill,minmax(180px,1fr))";
+  T.semantic.forEach((s,si)=>{
+    const card=document.createElement("div"); card.className="card";
+    const top=document.createElement("div"); top.className="strip"; top.style.height="36px";
+    top.appendChild(sw(s.light,()=>T.semantic[si].light,v=>T.semantic[si].light=v));
+    top.appendChild(sw(s.dark,()=>T.semantic[si].dark,v=>T.semantic[si].dark=v));
+    const bot=document.createElement("div"); bot.className="strip"; bot.style.height="18px";
+    bot.appendChild(sw(s.subtleLight,()=>T.semantic[si].subtleLight,v=>T.semantic[si].subtleLight=v));
+    bot.appendChild(sw(s.subtleDark,()=>T.semantic[si].subtleDark,v=>T.semantic[si].subtleDark=v));
+    const info=document.createElement("div"); info.style.cssText="padding:7px 10px;font-size:12px;background:var(--surface-2)";
+    info.innerHTML=`<b>${esc(s.name)}</b><div style="font-size:10.5px;color:var(--dim);font-family:Consolas,monospace">L ${esc(s.light)} · D ${esc(s.dark)}</div>`;
+    card.appendChild(top); card.appendChild(bot); card.appendChild(info);
+    sg.appendChild(card);
+  });
+  s3.appendChild(sg); P.appendChild(s3);
+  // opacity
+  const s4=document.createElement("div"); s4.className="sec";
+  s4.innerHTML=`<div class="sec-label">Opacity scale</div>`;
+  const og=document.createElement("div"); og.className="grid"; og.style.gridTemplateColumns="repeat(auto-fill,minmax(130px,1fr))";
+  T.opacity.forEach((o,oi)=>{
+    const card=document.createElement("div"); card.className="card";
+    const swd=document.createElement("div"); swd.style.cssText="height:30px;background:var(--accent);opacity:"+o.v; swd.setAttribute("data-hex",String(o.v));
+    swd.onclick=hexClick(()=>String(T.opacity[oi].v),v=>T.opacity[oi].v=parseFloat(v)||T.opacity[oi].v);
+    card.appendChild(swd);
+    card.insertAdjacentHTML("beforeend",`<div style="padding:5px 9px;font-size:12px;background:var(--surface-2)">${esc(o.name)} <span style="color:var(--dim);font-family:Consolas,monospace">${o.v}</span></div>`);
+    og.appendChild(card);
+  });
+  s4.appendChild(og); P.appendChild(s4);
+  // fonts
+  const s5=document.createElement("div"); s5.className="sec";
+  s5.innerHTML=`<div class="sec-label">Font stacks</div>`;
+  for(const k of ["display","body","mono"]){
+    const rowd=document.createElement("div"); rowd.className="sp-item";
+    rowd.innerHTML=`<span class="sp-lbl" style="width:70px">${k}</span>`;
+    const val=document.createElement("span"); val.style.cssText="font-size:14px;cursor:pointer;font-family:"+T.fonts[k]; val.textContent=T.fonts[k];
+    val.onclick=hexClick(()=>T.fonts[k],v=>T.fonts[k]=v);
+    rowd.appendChild(val); s5.appendChild(rowd);
+  }
+  P.appendChild(s5);
+}
+
+function renderType(P){
+  P.innerHTML=T.type.map((t,i)=>`<div class="type-row">
+    <div class="type-meta"><div class="type-token">${esc(t.token)}</div><div class="type-specs" data-ti="${i}" style="cursor:pointer">${t.px}px · ${t.weight} · lh ${t.lh} · ${esc(t.font)}</div></div>
+    <div class="type-sample" style="font-family:${T.fonts[t.font]||T.fonts.body};font-size:${t.px}px;font-weight:${t.weight};line-height:${t.lh}">${esc(t.sample)}</div></div>`).join("");
+  P.querySelectorAll("[data-ti]").forEach(el=>el.onclick=()=>{
+    if(!editMode) return;
+    const t=T.type[+el.dataset.ti];
+    const v=prompt("px · weight · line-height (e.g. 16 600 1.4):",`${t.px} ${t.weight} ${t.lh}`);
+    if(!v) return;
+    const p=v.trim().split(/\s+/); t.px=parseFloat(p[0])||t.px; t.weight=parseInt(p[1])||t.weight; t.lh=parseFloat(p[2])||t.lh;
+    SyncEngine.touch("tokens"); render();
+  });
+}
+
+function renderTokens(P){
+  const s1=document.createElement("div"); s1.className="sec";
+  s1.innerHTML=`<div class="sec-label">Spacing scale</div>`+T.spacing.map((s,i)=>`<div class="sp-item"><div class="sp-bar" style="width:${s.px}px"></div><span class="sp-lbl" data-si="${i}" style="cursor:pointer">${esc(s.name)} — ${s.px}px · ${esc(s.use)}</span></div>`).join("");
+  P.appendChild(s1);
+  s1.querySelectorAll("[data-si]").forEach(el=>el.onclick=()=>{ if(!editMode)return; const s=T.spacing[+el.dataset.si]; const v=prompt("px:",s.px); if(v){ s.px=parseFloat(v)||s.px; SyncEngine.touch("tokens"); render(); } });
+  const s2=document.createElement("div"); s2.className="sec";
+  s2.innerHTML=`<div class="sec-label">Radius scale</div><div class="r-grid">`+T.radius.map((r,i)=>`<div><div class="r-box" data-ri="${i}" style="border-radius:${Math.min(r.px,23)}px;cursor:pointer">${r.px===999?"pill":r.px+"px"}</div><div class="lbl">${esc(r.name)}</div></div>`).join("")+`</div>`;
+  P.appendChild(s2);
+  s2.querySelectorAll("[data-ri]").forEach(el=>el.onclick=()=>{ if(!editMode)return; const r=T.radius[+el.dataset.ri]; const v=prompt("px:",r.px); if(v){ r.px=parseFloat(v)||r.px; SyncEngine.touch("tokens"); render(); } });
+  const s3=document.createElement("div"); s3.className="sec";
+  s3.innerHTML=`<div class="sec-label">Elevation</div>`+T.elevation.map(e=>`<div class="elev" style="box-shadow:${e.css==="none"?"none":e.css}">${esc(e.name)} — <code>${esc(e.css)}</code> · ${esc(e.use)}</div>`).join("");
+  P.appendChild(s3);
+}
+
+function renderComponents(P){
+  const acc=T.accents[0]||{};
+  P.innerHTML=`
+  <div class="comp-sec"><div class="comp-title">Buttons</div><div class="comp-row">
+    <button class="c-btn primary">Primary</button><button class="c-btn secondary">Secondary</button>
+    <button class="c-btn ghost">Ghost</button><button class="c-btn danger">Danger</button>
+    <button class="c-btn primary" disabled>Disabled</button><button class="c-btn primary sm">Small</button></div></div>
+  <div class="comp-sec"><div class="comp-title">Inputs</div><div class="comp-row">
+    <input class="c-input" placeholder="Text input…">
+    <select class="c-select"><option>Select option</option><option>Another</option></select>
+    <label class="c-check"><input type="checkbox" checked> Checkbox</label>
+    <label class="c-check"><input type="radio" name="r" checked> Radio</label>
+    <span class="c-toggle on" onclick="this.classList.toggle('on')"></span></div></div>
+  <div class="comp-sec"><div class="comp-title">Chips & badges</div><div class="comp-row">
+    <span class="c-chip">Default chip</span><span class="c-chip acc">Accent chip</span>
+    <span class="c-chip" style="color:var(--ok);border-color:var(--ok)">Success</span>
+    <span class="c-chip" style="color:var(--warn);border-color:var(--warn)">Warning</span>
+    <span class="c-chip" style="color:var(--bad);border-color:var(--bad)">Danger</span></div></div>
+  <div class="comp-sec"><div class="comp-title">Card</div>
+    <div class="c-card"><h4>Card title</h4><p>Supporting copy that explains what this card is about.</p><button class="c-btn primary sm">Action</button></div></div>
+  <div class="comp-sec"><div class="comp-title">List row</div>
+    <div class="c-listrow"><div class="ic">◻</div><div style="flex:1"><div style="font-weight:600;font-size:13.5px">Row title</div><div style="font-size:12px;color:var(--dim)">Secondary line</div></div><span style="color:var(--faint)">›</span></div></div>
+  <div class="comp-sec"><div class="comp-title">Modal / dialog</div>
+    <div class="c-modal-demo"><h4>Dialog title</h4><p>Are you sure you want to do the thing? This explains consequences honestly.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="c-btn secondary sm">Cancel</button><button class="c-btn primary sm">Confirm</button></div></div></div>
+  <div class="comp-sec"><div class="comp-title">Empty state</div>
+    <div class="c-empty"><div class="big">∅</div><p><b>Nothing here yet.</b><br>A friendly nudge about what to do first.</p></div></div>
+  <div class="comp-sec"><div class="comp-title">Toast</div><div class="comp-row">
+    <span style="background:var(--text);color:var(--bg);padding:7px 16px;border-radius:999px;font-size:12.5px">Saved ✓</span></div></div>
+  <p class="hint" style="margin-top:4px">These previews render from the CSS variables above — when the tokens change (by you or Claude), they restyle live. Add new component patterns here as the app grows.</p>`;
+}
+
+/* ---------------- sync wiring ---------------- */
+const conflicts=new Set(); let drafts=[];
+function renderBanners(){
+  const B=$("#banners"); let html="";
+  if(SyncEngine.mode==="fallback" && !localStorage.getItem("ds_ffwarn"))
+    html+=`<div class="banner"><span>⚠</span><div class="grow"><b>No auto-save in this browser</b> (Firefox/Zen). Reads stay live; your edits need <b>Export</b>. Chrome/Edge/Helium give full auto-save.</div><button class="btn" id="ffOk">Got it</button></div>`;
+  if(SyncEngine.mode==="fs-reconnect")
+    html+=`<div class="banner"><span>🔌</span><div class="grow">Reconnect the project folder to re-enable auto-save.</div><button class="btn" id="rec">Reconnect</button></div>`;
+  if(drafts.length)
+    html+=`<div class="banner"><span>💾</span><div class="grow">Unsaved token edits from a previous session.</div><button class="btn" id="dRes">Restore</button><button class="btn" id="dDis">Discard</button></div>`;
+  if(conflicts.has("tokens"))
+    html+=`<div class="banner"><span>⚔</span><div class="grow"><b>Conflict:</b> tokens changed on disk while you had unsaved edits.</div><button class="btn" id="cMine">Keep mine</button><button class="btn" id="cDisk">Take disk</button></div>`;
+  if(SyncEngine.mode!=="fs" && SyncEngine.dirtyKeys().length)
+    html+=`<div class="banner"><span>💾</span><div class="grow">Unsaved token edits (fallback mode).</div><button class="btn" id="dl">Download design-tokens.js</button><button class="btn" id="ms">Dropped in — mark synced</button></div>`;
+  B.innerHTML=html;
+  const w=(id,fn)=>{ const e=$( "#"+id); if(e) e.onclick=fn; };
+  w("ffOk",()=>{ localStorage.setItem("ds_ffwarn","1"); renderBanners(); });
+  w("rec",()=>SyncEngine.connect());
+  w("dRes",()=>{ SyncEngine.restoreDraft("tokens"); drafts=[]; render(); renderBanners(); });
+  w("dDis",()=>{ SyncEngine.discardDraft("tokens"); drafts=[]; renderBanners(); });
+  w("cMine",()=>{ conflicts.clear(); SyncEngine.resolveConflict("tokens","mine"); renderBanners(); });
+  w("cDisk",()=>{ conflicts.clear(); SyncEngine.resolveConflict("tokens","disk"); render(); renderBanners(); });
+  w("dl",()=>SyncEngine.download("tokens"));
+  w("ms",()=>{ SyncEngine.markExported(); renderBanners(); toast("Marked synced"); });
+}
+function renderStatus(mode){
+  const p=$("#statusPill"), c=$("#connectBtn");
+  if(mode==="fs"){ p.innerHTML=`<span class="pill ok">● Auto-save on</span>`; c.style.display="none"; }
+  else if(mode==="fs-available"){ p.innerHTML=`<span class="pill">○ Not connected</span>`; c.style.display=""; }
+  else if(mode==="fs-reconnect"){ p.innerHTML=`<span class="pill warn">◌ Reconnect</span>`; c.style.display=""; c.textContent="Reconnect"; }
+  else p.innerHTML=`<span class="pill warn">△ Fallback mode</span>`;
+  renderBanners();
+}
+$("#connectBtn").onclick=async()=>{ if(await SyncEngine.connect()) toast("Connected"); };
+$("#editBtn").onclick=()=>{ editMode=!editMode; $("#editBtn").classList.toggle("on",editMode); toast(editMode?"Edit mode — click any value to change it":"Edit mode off"); render(); };
+
+SyncEngine.init({
+  pageId:"ds", pageRootId:"claude-root", globalVar:"DS_DATA",
+  rootName:".claude", validateDirs:["creative"], pollMs:2500,
+  files:[{key:"tokens", src:"data/design-tokens.js", fsPath:["creative","data","design-tokens.js"], label:"Design tokens"}],
+  getLocal:()=>T,
+  setLocal:(k,v)=>{ T=v; },
+  onStatus:renderStatus,
+  onExternal:()=>{ render(); toast("Tokens updated from disk"); },
+  onConflict:()=>{ conflicts.add("tokens"); renderBanners(); },
+  onDirty:()=>renderBanners(),
+  onDrafts:k=>{ drafts=k; }
+});
+renderTabs(); render(); renderBanners();
+</script>
+</body>
+</html>

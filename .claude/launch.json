@@ -1,0 +1,41 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "hub-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes",
+        "http-server",
+        ".",
+        "-p",
+        "8734",
+        "-c-1",
+        "--silent"
+      ],
+      "port": 8734
+    },
+    {
+      "name": "cardinal-sandbox",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "Cardinal",
+        "run",
+        "sandbox"
+      ],
+      "port": 5179
+    },
+    {
+      "name": "cardinal-shots",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "Cardinal",
+        "run",
+        "shots"
+      ],
+      "port": 5180
+    }
+  ]
+}

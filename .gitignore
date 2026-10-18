@@ -1,0 +1,30 @@
+# ---- OS junk ----
+.DS_Store
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ---- Editors ----
+.vscode/
+.idea/
+*.swp
+*~
+
+# ---- Node / Vite ----
+node_modules/
+npm-debug.log*
+*.log
+.env
+.env.local
+**/dist/
+
+# ---- Tauri / Rust ----
+Cardinal/src-tauri/target/
+Cardinal/src-tauri/gen/schemas/
+
+# ---- Cardinal dev sandbox data ----
+Cardinal/.sandbox-data/
+
+# NOTE: .claude/project/data/*.js and .claude/creative/data/*.js
+# ARE the project state and belong in git.
+Cardinal/.shots-data/

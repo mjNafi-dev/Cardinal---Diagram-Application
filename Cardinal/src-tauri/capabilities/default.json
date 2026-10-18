@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "What the Cardinal window may do. Storage and Save-as are Cardinal's own commands (always allowed).",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

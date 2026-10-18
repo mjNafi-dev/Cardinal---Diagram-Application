@@ -1,0 +1,118 @@
+# Builds the Cardinal desktop app and publishes a GitHub Release.
+# Runs when a version tag like v0.2.0 is pushed (GitHub Desktop: History → right-click commit → Create Tag… → Push).
+#
+#   1. notes    – checks the tag matches the app version, writes release notes from versions.js, creates a draft release
+#   2. build    – Windows installer (NSIS .exe) and a universal macOS .dmg, uploaded to the draft
+#   3. publish  – adds copies with fixed names (so the README's "latest" links always work) and publishes the release
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)build, e.g. v0.2.0'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check every version copy matches the tag
+        run: node Cardinal/scripts/set-version.mjs --check "$TAG"
+      - name: Release notes from versions.js
+        run: node Cardinal/scripts/release-notes.mjs "$TAG" > notes.md
+      - name: Create draft release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          gh release create "$TAG" --draft --verify-tag --title "Cardinal ${TAG#v}" --notes-file notes.md
+          echo "id=$(gh api repos/${{ github.repository }}/releases --jq ".[] | select(.tag_name==\"$TAG\") | .id" | head -n1)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: notes
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            args: ''
+            pattern: '*-setup.exe'
+            stable: Cardinal-Windows-Setup.exe
+          - os: macos-latest
+            args: '--target universal-apple-darwin'
+            pattern: '*.dmg'
+            stable: Cardinal-macOS.dmg
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Cardinal/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: Cardinal/src-tauri -> target
+      - name: Install app dependencies
+        working-directory: Cardinal
+        run: npm ci
+      - name: Build and upload to the draft release
+        id: tauri
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          projectPath: Cardinal
+          releaseId: ${{ needs.notes.outputs.release_id }}
+          args: ${{ matrix.args }}
+      - name: Keep a copy with a fixed name
+        shell: bash
+        run: |
+          f=$(find Cardinal/src-tauri/target -path '*/bundle/*' -name '${{ matrix.pattern }}' | head -n1)
+          echo "Found: $f"
+          test -n "$f"
+          mkdir -p stable && cp "$f" "stable/${{ matrix.stable }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.stable }}
+          path: stable/${{ matrix.stable }}
+
+  publish:
+    needs: [notes, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: stable
+          merge-multiple: true
+      - name: Upload fixed-name copies and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -la stable
+          gh release upload "$TAG" stable/* --clobber --repo ${{ github.repository }}
+          gh release edit "$TAG" --draft=false --latest --repo ${{ github.repository }}

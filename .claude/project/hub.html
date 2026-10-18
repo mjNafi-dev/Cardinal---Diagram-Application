@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cardinal · Project Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<!-- Data layer: each file owns one key of window.HUB_DATA -->
+<script src="data/meta.js"></script>
+<script src="data/prd.js"></script>
+<script src="data/versions.js"></script>
+<script src="data/checklist.js"></script>
+<script src="data/features.js"></script>
+<script src="data/premium.js"></script>
+<script src="data/decisions.js"></script>
+<script src="data/rules.js"></script>
+<script src="data/competitors.js"></script>
+<script src="../shared/sync-engine.js"></script>
+<style>
+  /* ==========================================================================
+     Restyled for Cardinal: cardinal-red accent, Inter + JetBrains Mono,
+     Lucid-like light neutrals with a matching dark mode.
+     ========================================================================== */
+  :root {
+    --bg:#F3F4F6; --surface:#ffffff; --surface-2:#EEF0F3;
+    --border:#E3E5E9; --border-strong:#CBD0D6;
+    --text:#1B1D21; --dim:#5B616B; --faint:#8A919B;
+    --accent:#D7263D; --accent-fg:#ffffff;
+    --ok:#2E7D4F; --warn:#A8760A; --bad:#B3382C;
+    --ok-bg:rgba(46,125,79,.10); --warn-bg:rgba(168,118,10,.12); --bad-bg:rgba(179,56,44,.10);
+    --shadow:0 4px 20px rgba(0,0,0,.08); --r:10px; --r-sm:6px;
+  }
+  [data-theme="dark"] {
+    --bg:#111214; --surface:#191B1F; --surface-2:#262931;
+    --border:#2A2D33; --border-strong:#3A3E46;
+    --text:#E8EAED; --dim:#A3A9B2; --faint:#737A84;
+    --accent:#EE4A5F; --accent-fg:#ffffff;
+    --ok:#5DBB87; --warn:#D9A441; --bad:#E07B6F;
+    --ok-bg:rgba(93,187,135,.12); --warn-bg:rgba(217,164,65,.12); --bad-bg:rgba(224,123,111,.12);
+    --shadow:0 4px 20px rgba(0,0,0,.45);
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter','Segoe UI',system-ui,sans-serif; font-size:14px; line-height:1.55; max-width:1160px; margin:0 auto; padding:22px 28px 90px; }
+  button { font-family:inherit; }
+  h1 { font-size:21px; font-weight:650; letter-spacing:-.01em; margin:0; }
+  h1 .ver { color:var(--dim); font-weight:400; font-size:13px; margin-left:8px; font-family:'JetBrains Mono',Consolas,monospace; }
+  h1 .unset { color:var(--faint); font-style:italic; font-weight:400; }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px; }
+  .top-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .btn { background:var(--surface); color:var(--text); border:1px solid var(--border); padding:7px 12px; border-radius:var(--r-sm); font-size:13px; cursor:pointer; transition:background .12s,border-color .12s; }
+  .btn:hover { background:var(--surface-2); border-color:var(--border-strong); }
+  .btn.primary { background:var(--accent); color:var(--accent-fg); border-color:var(--accent); }
+  .btn.primary:hover { filter:brightness(1.08); }
+  .btn.small { padding:4px 9px; font-size:12px; }
+  .btn.danger:hover { color:var(--bad); border-color:var(--bad); }
+
+  .pill { display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:5px 11px; border-radius:999px; border:1px solid var(--border); background:var(--surface); }
+  .pill .dot { width:8px; height:8px; border-radius:50%; }
+  .pill.ok { color:var(--ok); border-color:var(--ok); background:var(--ok-bg); }
+  .pill.warn { color:var(--warn); border-color:var(--warn); background:var(--warn-bg); }
+
+  .banner { display:flex; align-items:flex-start; gap:10px; padding:11px 14px; border-radius:var(--r-sm); margin-bottom:10px; font-size:13px; border:1px solid var(--border-strong); background:var(--surface); }
+  .banner.warn { border-color:var(--warn); background:var(--warn-bg); }
+  .banner.bad { border-color:var(--bad); background:var(--bad-bg); }
+  .banner .grow { flex:1; }
+  .banner .btns { display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; }
+
+  .tabs { display:flex; gap:2px; border-bottom:1px solid var(--border); margin:8px 0 20px; flex-wrap:wrap; }
+  .tab { background:none; border:none; padding:9px 14px; color:var(--dim); font-size:13.5px; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--text); border-bottom-color:var(--accent); font-weight:600; }
+  .tab .n { color:var(--faint); font-size:11px; margin-left:5px; }
+  .panel { display:none; } .panel.active { display:block; }
+
+  .sec { background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; margin-bottom:14px; }
+  .sec-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .sec-head h3 { margin:0; font-size:14px; font-weight:650; }
+  .sec-head .grow { flex:1; }
+  .muted { color:var(--dim); } .faint { color:var(--faint); }
+  .mono { font-family:'JetBrains Mono',Consolas,monospace; }
+  .empty { color:var(--faint); font-style:italic; padding:6px 0; font-size:13px; }
+
+  .row { display:flex; align-items:flex-start; gap:10px; padding:8px 6px; border-top:1px solid var(--border); position:relative; }
+  .row:first-of-type { border-top:none; }
+  .row .grow { flex:1; min-width:0; }
+  .row .hov { display:none; gap:4px; flex-shrink:0; }
+  .row:hover .hov { display:inline-flex; }
+  .ibtn { background:var(--surface-2); border:1px solid var(--border); color:var(--dim); border-radius:4px; font-size:11px; padding:2px 7px; cursor:pointer; }
+  .ibtn:hover { color:var(--text); border-color:var(--border-strong); }
+  .ibtn.danger:hover { color:var(--bad); border-color:var(--bad); }
+
+  .item-text code { background:var(--surface-2); padding:1px 5px; border-radius:3px; font-family:'JetBrains Mono',Consolas,monospace; font-size:12.5px; }
+  .item-text ul { margin:4px 0; padding-left:20px; }
+
+  /* status chips */
+  .chip { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; padding:2px 9px; border-radius:999px; border:1px solid transparent; }
+  .chip.ok { color:var(--ok); background:var(--ok-bg); border-color:var(--ok); }
+  .chip.warn { color:var(--warn); background:var(--warn-bg); border-color:var(--warn); }
+  .chip.bad { color:var(--bad); background:var(--bad-bg); border-color:var(--bad); }
+  .chip.dim { color:var(--dim); background:var(--surface-2); border-color:var(--border); }
+
+  /* checklist */
+  .prog-wrap { display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap; }
+  .prog-bar { flex:1; min-width:180px; height:8px; background:var(--surface-2); border-radius:4px; overflow:hidden; border:1px solid var(--border); }
+  .prog-fill { height:100%; background:var(--accent); transition:width .3s; }
+  .ck { width:16px; height:16px; border:1.5px solid var(--border-strong); border-radius:4px; cursor:pointer; flex-shrink:0; margin-top:2px; display:inline-flex; align-items:center; justify-content:center; font-size:11px; color:var(--accent-fg); }
+  .ck.on { background:var(--ok); border-color:var(--ok); }
+  .row.done .item-text { color:var(--dim); text-decoration:line-through; text-decoration-color:var(--faint); }
+  .row.removed { background:var(--bad-bg); border-radius:6px; }
+  .row.removed .item-text { color:var(--dim); text-decoration:line-through; }
+  .row.later { background:var(--warn-bg); border-radius:6px; }
+  .detail { font-size:12px; color:var(--dim); margin-top:2px; }
+
+  /* versions */
+  .vtag { font-family:'JetBrains Mono',Consolas,monospace; font-weight:650; color:var(--accent); font-size:13px; }
+  .vmeta { font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.05em; }
+  .pgchip { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600; padding:1px 8px; border-radius:999px; margin:1px 2px 1px 0; border:1px solid var(--border); color:var(--dim); background:var(--surface-2); }
+  .pgchip.add { color:var(--ok); background:var(--ok-bg); border-color:var(--ok); }
+  .pgchip.edit { color:var(--warn); background:var(--warn-bg); border-color:var(--warn); }
+  .pgchip.remove { color:var(--bad); background:var(--bad-bg); border-color:var(--bad); }
+  .pending-input { display:flex; gap:8px; margin-bottom:12px; }
+  .pending-input textarea { flex:1; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:9px 12px; border-radius:var(--r-sm); font-size:13px; font-family:inherit; resize:vertical; min-height:40px; outline:none; }
+  .pending-input textarea:focus { border-color:var(--accent); }
+  input[type=search], .search-input { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:var(--r-sm); font-size:13px; font-family:inherit; outline:none; min-width:220px; }
+  input[type=search]:focus { border-color:var(--accent); }
+
+  /* features */
+  table.ft { width:100%; border-collapse:collapse; font-size:13px; }
+  table.ft th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--faint); padding:6px 8px; border-bottom:1px solid var(--border-strong); }
+  table.ft td { padding:7px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+  table.ft tr:hover td { background:var(--surface-2); }
+  .st { cursor:pointer; font-family:'JetBrains Mono',Consolas,monospace; font-weight:700; font-size:12px; user-select:none; padding:1px 8px; border-radius:4px; display:inline-block; min-width:52px; text-align:center; }
+  .st.done { color:var(--ok); background:var(--ok-bg); }
+  .st.partial { color:var(--warn); background:var(--warn-bg); }
+  .st.todo { color:var(--dim); background:var(--surface-2); }
+  .st.na { color:var(--faint); }
+  .st.yes { color:var(--ok); background:var(--ok-bg); }
+  .st.no { color:var(--bad); background:var(--bad-bg); }
+  .tier { cursor:pointer; user-select:none; }
+
+  /* competitors */
+  .grade { width:46px; height:46px; border-radius:50%; border:2.5px solid currentColor; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; transform:rotate(-8deg); flex-shrink:0; font-family:'JetBrains Mono',Consolas,monospace; }
+  .grade.ok { color:var(--ok); } .grade.warn { color:var(--warn); } .grade.bad { color:var(--bad); } .grade.dim { color:var(--faint); }
+  .skipbox { border:1.5px dashed var(--bad); background:var(--bad-bg); padding:9px 12px; border-radius:8px; font-size:12.5px; margin-top:12px; }
+  .skipbox .tag { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--bad); display:block; margin-bottom:2px; }
+  .swlist { margin:6px 0 0; padding-left:0; list-style:none; font-size:13px; }
+  .swlist li { padding-left:18px; position:relative; margin-bottom:4px; }
+  .swlist.plus li::before { content:"+"; position:absolute; left:2px; color:var(--ok); font-weight:700; }
+  .swlist.minus li::before { content:"✕"; position:absolute; left:2px; color:var(--bad); font-weight:700; font-size:11px; top:2px; }
+
+  /* modal + toast */
+  .modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; }
+  .modal { background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r); padding:22px; max-width:560px; width:100%; max-height:86vh; overflow-y:auto; box-shadow:var(--shadow); }
+  .modal h2 { margin:0 0 14px; font-size:15px; font-weight:650; }
+  .field { margin-bottom:13px; }
+  .field label { display:block; font-size:12px; color:var(--dim); margin-bottom:4px; }
+  .field input, .field select, .field textarea { width:100%; background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:8px 10px; border-radius:var(--r-sm); font-size:13px; font-family:inherit; outline:none; }
+  .field textarea { min-height:90px; resize:vertical; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
+  .modal .actions { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+  .chip-pick { display:flex; flex-wrap:wrap; gap:6px; padding:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-sm); }
+  .chip-pick .opt { padding:3px 11px; border-radius:999px; background:var(--surface); border:1px solid var(--border); font-size:12px; cursor:pointer; user-select:none; }
+  .chip-pick .opt.t-edit { background:var(--warn-bg); border-color:var(--warn); color:var(--warn); }
+  .chip-pick .opt.t-add { background:var(--ok-bg); border-color:var(--ok); color:var(--ok); }
+  .chip-pick .opt.t-remove { background:var(--bad-bg); border-color:var(--bad); color:var(--bad); }
+  #toast { position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--text); color:var(--bg); padding:8px 18px; border-radius:999px; font-size:12.5px; opacity:0; transition:.18s; pointer-events:none; z-index:200; white-space:nowrap; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* dirty bar (fallback mode) */
+  #dirtyBar { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:2px solid var(--warn); padding:10px 26px; display:none; align-items:center; gap:14px; z-index:90; font-size:13px; box-shadow:0 -4px 18px rgba(0,0,0,.15); }
+  #dirtyBar.show { display:flex; }
+
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+
+  /* print (PRD → PDF) */
+  #printArea { display:none; }
+  @media print {
+    body > *:not(#printArea) { display:none !important; }
+    #printArea { display:block !important; color:#000; font-size:12pt; }
+    #printArea h1 { font-size:20pt; margin-bottom:2pt; }
+    #printArea .psub { color:#555; font-size:10pt; margin-bottom:16pt; }
+    #printArea h2 { font-size:13pt; border-bottom:1px solid #999; padding-bottom:3pt; margin:14pt 0 6pt; }
+    #printArea code { font-family:'JetBrains Mono',Consolas,monospace; background:#eee; padding:0 3px; }
+    body { max-width:none; padding:0; background:#fff; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center"><svg width="26" height="26" viewBox="0 0 100 100" fill="none" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-6px;margin-right:8px"><path d="M33 33 C33 22 40 15 54 10 L50 24 C61 27 67 37 67 50 C67 56 66 60 64 64 L86 78 L81 83 L58 71 C50 75 40 73 35 64 C32 58 32 50 33 43"/><path d="M33 33 L22 38 L33 43"/><path d="M43 49 C53 47 61 53 64 64"/><path d="M47 73 L46 82 M55 73 L55 82"/><path d="M30 82 L66 82"/></svg><h1 id="titleBox"></h1></div>
+  <div class="top-actions">
+    <span id="statusPill"></span>
+    <button class="btn" id="connectBtn" style="display:none">Connect project folder</button>
+    <button class="btn" id="themeBtn" title="Toggle theme">🌓</button>
+  </div>
+</div>
+
+<div id="banners"></div>
+
+<div class="tabs" id="tabs"></div>
+
+<main id="panels"></main>
+
+<div id="dirtyBar">
+  <span>⚠ <b id="dirtyCount"></b> file(s) changed in this page but not saved to disk (fallback mode).</span>
+  <button class="btn primary small" id="dlDirtyBtn">Download changed file(s)</button>
+  <button class="btn small" id="markSyncBtn" title="Click after dropping the downloaded files into .claude/project/data/">I've dropped them in — mark synced</button>
+</div>
+
+<div id="modalHost"></div>
+<div id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+"use strict";
+/* ============================ STATE ============================ */
+const KEYS = ["meta","prd","versions","checklist","features","premium","competitors","decisions","rules"];
+const S = { data:{}, tab: localStorage.getItem("hub_tab") || "prd", vSearch:"", ckFilter:"all" };
+for (const k of KEYS) S.data[k] = JSON.parse(JSON.stringify(window.HUB_DATA[k] ?? null));
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function md(s) { // markdown-lite: **bold** *italic* `code` bullets, line breaks
+  const lines = esc(s ?? "").split(/\r?\n/);
+  let out = "", inUl = false;
+  const inline = t => t.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g,"$1<em>$2</em>");
+  for (const ln of lines) {
+    if (/^\s*[-•] /.test(ln)) { if(!inUl){out+="<ul>";inUl=true;} out+="<li>"+inline(ln.replace(/^\s*[-•] /,""))+"</li>"; }
+    else { if(inUl){out+="</ul>";inUl=false;} out += inline(ln)+"<br>"; }
+  }
+  if (inUl) out+="</ul>";
+  return out.replace(/(<br>)+$/,"");
+}
+let toastTimer;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200); }
+function save(key){ SyncEngine.touch(key); }
+
+/* ============================ THEME ============================ */
+function applyTheme(){ let t=localStorage.getItem("hub_theme")||"system"; if(t==="system") t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"; document.documentElement.setAttribute("data-theme",t); }
+$("#themeBtn").onclick=()=>{ const cur=localStorage.getItem("hub_theme")||"system"; localStorage.setItem("hub_theme", cur==="system"?"dark":cur==="dark"?"light":"system"); applyTheme(); };
+applyTheme(); matchMedia("(prefers-color-scheme: dark)").addEventListener("change",applyTheme);
+
+/* ============================ MODAL ============================ */
+/* fields: {id,label,type:"text"|"textarea"|"select"|"pages",value,options,placeholder} */
+function openModal(title, fields, onSave, extraBtn){
+  const host=$("#modalHost");
+  const pageState={};
+  host.innerHTML=`<div class="modal-bg"><div class="modal"><h2>${esc(title)}</h2>
+    ${fields.map(f=>{
+      if(f.type==="select") return `<div class="field"><label>${esc(f.label)}</label><select id="mf_${f.id}">${f.options.map(o=>`<option value="${esc(o.v)}" ${o.v===f.value?"selected":""}>${esc(o.t)}</option>`).join("")}</select></div>`;
+      if(f.type==="textarea") return `<div class="field"><label>${esc(f.label)}</label><textarea id="mf_${f.id}" placeholder="${esc(f.placeholder||"")}">${esc(f.value||"")}</textarea></div>`;
+      if(f.type==="pages"){
+        (f.value||[]).forEach(p=>pageState[p.name]=p.type||"edit");
+        const pages=(S.data.meta.pages||[]);
+        return `<div class="field"><label>${esc(f.label)} <span class="faint">(click to cycle: off → edited → added → removed)</span></label>
+          <div class="chip-pick" id="mf_${f.id}">${pages.length?pages.map(p=>`<span class="opt ${pageState[p]?("t-"+pageState[p]):""}" data-pg="${esc(p)}">${esc(p)}</span>`).join(""):'<span class="faint">No pages defined yet — use the "Pages…" button in the Versions tab.</span>'}</div></div>`;
+      }
+      return `<div class="field"><label>${esc(f.label)}</label><input id="mf_${f.id}" value="${esc(f.value||"")}" placeholder="${esc(f.placeholder||"")}"></div>`;
+    }).join("")}
+    <div class="actions">${extraBtn?`<button class="btn danger" id="mExtra">${esc(extraBtn.label)}</button><span style="flex:1"></span>`:""}<button class="btn" id="mCancel">Cancel</button><button class="btn primary" id="mSave">Save</button></div>
+  </div></div>`;
+  host.querySelectorAll(".chip-pick .opt[data-pg]").forEach(elm=>{
+    elm.onclick=()=>{ const p=elm.dataset.pg; const cyc=[undefined,"edit","add","remove"]; const cur=pageState[p]; const nxt=cyc[(cyc.indexOf(cur)+1)%4];
+      if(nxt===undefined) delete pageState[p]; else pageState[p]=nxt;
+      elm.className="opt"+(pageState[p]?" t-"+pageState[p]:""); };
+  });
+  const close=()=>host.innerHTML="";
+  host.querySelector(".modal-bg").onclick=e=>{ if(e.target===e.currentTarget) close(); };
+  $("#mCancel").onclick=close;
+  if(extraBtn) $("#mExtra").onclick=()=>{ close(); extraBtn.fn(); };
+  $("#mSave").onclick=()=>{
+    const vals={};
+    for(const f of fields){
+      if(f.type==="pages") vals[f.id]=Object.entries(pageState).map(([name,type])=>({name,type}));
+      else vals[f.id]=host.querySelector("#mf_"+f.id).value;
+    }
+    close(); onSave(vals);
+  };
+  const first=host.querySelector("input,textarea"); if(first) first.focus();
+}
+
+/* ============================ HEADER / TABS ============================ */
+function renderHeader(){
+  const m=S.data.meta;
+  const name=m.appName || null;
+  $("#titleBox").innerHTML = (name?esc(name):`<span class="unset">${esc(m.codename||"untitled project")}</span>`)
+    + `<span class="ver">v${esc(m.version)}</span>`
+    + (m.setupDone?"":` <span class="chip warn" title="Open Claude Code in the project folder and say 'start setup'">setup not run</span>`);
+  document.title = (name||m.codename||"Project") + " — Hub";
+}
+const TABS=[
+  {id:"prd", label:"PRD"},
+  {id:"versions", label:"Versions", n:()=> (S.data.versions.pending||[]).length ? S.data.versions.pending.length+" pending" : (S.data.versions.versions||[]).length},
+  {id:"checklist", label:"Checklist", n:()=>{let t=0,d=0; S.data.checklist.sections.forEach(s=>s.items.forEach(i=>{if(i.status==="todo")t++; if(i.status==="done")d++;})); return t?t+" open":"";}},
+  {id:"features", label:"Features"},
+  {id:"premium", label:"Premium", show:()=>!!S.data.meta.premiumEnabled},
+  {id:"competitors", label:"Competitors", show:()=>S.data.competitors.enabled!==false, n:()=>{const r=(S.data.competitors.competitors||[]).filter(c=>c.requested).length; return r?r+" to research":(S.data.competitors.competitors||[]).length||"";}},
+  {id:"decisions", label:"Decisions", n:()=>{let o=0; S.data.decisions.sections.forEach(s=>s.questions.forEach(q=>{if(q.status==="open"||q.status==="deferred")o++;})); return o?o+" open":"";}},
+  {id:"rules", label:"Rules"}
+];
+function renderTabs(){
+  const vis=TABS.filter(t=>!t.show||t.show());
+  if(!vis.find(t=>t.id===S.tab)) S.tab="prd";
+  $("#tabs").innerHTML=vis.map(t=>`<button class="tab ${t.id===S.tab?"active":""}" data-t="${t.id}">${t.label}${t.n&&t.n()?`<span class="n">${t.n()}</span>`:""}</button>`).join("");
+  $("#tabs").querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ S.tab=b.dataset.t; localStorage.setItem("hub_tab",S.tab); renderTabs(); renderPanels(); });
+}
+
+/* ============================ PANELS ============================ */
+function renderPanels(){
+  const P=$("#panels");
+  P.innerHTML="";
+  ({prd:renderPRD, versions:renderVersions, checklist:renderChecklist, features:renderFeatures, premium:renderPremium, competitors:renderCompetitors, decisions:renderDecisions, rules:renderRules})[S.tab](P);
+}
+
+/* ---------------- PRD ---------------- */
+function renderPRD(P){
+  const d=S.data.prd;
+  P.innerHTML=`<div class="sec-head" style="margin-bottom:12px">
+    <span class="muted" style="font-size:12.5px">The living product document. Claude keeps it current; you can edit any section.</span><span style="flex:1"></span>
+    <button class="btn small" id="addSec">+ Section</button>
+    <button class="btn primary small" id="pdfBtn" title="Opens the print dialog — choose 'Save as PDF'">Export PDF</button></div>
+  <div id="prdList"></div>`;
+  const list=$("#prdList");
+  list.innerHTML = d.sections.map((s,i)=>`<div class="sec"><div class="sec-head"><h3>${esc(s.heading)}</h3><span class="grow"></span>
+      <span class="hov" style="display:inline-flex;gap:4px">
+        <button class="ibtn" data-a="up" data-i="${i}" ${i===0?"disabled":""}>↑</button>
+        <button class="ibtn" data-a="dn" data-i="${i}" ${i===d.sections.length-1?"disabled":""}>↓</button>
+        <button class="ibtn" data-a="ed" data-i="${i}">edit</button>
+        <button class="ibtn danger" data-a="del" data-i="${i}">✕</button></span></div>
+    <div class="item-text">${md(s.body)}</div></div>`).join("") || `<div class="empty">No sections.</div>`;
+  list.querySelectorAll(".ibtn").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i, a=b.dataset.a;
+    if(a==="up"||a==="dn"){ const j=a==="up"?i-1:i+1; [d.sections[i],d.sections[j]]=[d.sections[j],d.sections[i]]; }
+    else if(a==="del"){ if(!confirm("Delete section “"+d.sections[i].heading+"”?")) return; d.sections.splice(i,1); }
+    else { const s=d.sections[i]; openModal("Edit section",[{id:"h",label:"Heading",value:s.heading},{id:"b",label:"Body (markdown-lite: **bold**, `code`, - bullets)",type:"textarea",value:s.body}],v=>{ s.heading=v.h; s.body=v.b; save("prd"); renderPanels(); }); return; }
+    save("prd"); renderPanels();
+  });
+  $("#addSec").onclick=()=>openModal("New section",[{id:"h",label:"Heading"},{id:"b",label:"Body",type:"textarea"}],v=>{ d.sections.push({heading:v.h||"Untitled",body:v.b||""}); save("prd"); renderPanels(); });
+  $("#pdfBtn").onclick=()=>{
+    const m=S.data.meta;
+    $("#printArea").innerHTML=`<h1>${esc(m.appName||m.codename)} — PRD</h1><div class="psub">v${esc(m.version)} · exported ${new Date().toLocaleDateString()}</div>`
+      + d.sections.map(s=>`<h2>${esc(s.heading)}</h2><div>${md(s.body)}</div>`).join("");
+    window.print();
+  };
+}
+
+/* ---------------- VERSIONS ---------------- */
+function pgChips(pages){ return (pages||[]).map(p=>`<span class="pgchip ${p.type||"edit"}">${p.type==="add"?"+":p.type==="remove"?"−":"~"} ${esc(p.name)}</span>`).join("") || `<span class="faint" style="font-size:11px">no pages tagged</span>`; }
+function bump(ver,seg){ const p=String(ver).split(".").map(n=>parseInt(n,10)||0); while(p.length<3)p.push(0); if(seg===0)return (p[0]+1)+".0.0"; if(seg===1)return p[0]+"."+(p[1]+1)+".0"; return p[0]+"."+p[1]+"."+(p[2]+1); }
+function renderVersions(P){
+  const d=S.data.versions;
+  P.innerHTML=`<div class="sec-head" style="margin-bottom:12px">
+      <input type="search" id="vSearch" placeholder="Search changes, versions, pages…" value="${esc(S.vSearch)}">
+      <span class="grow"></span>
+      <button class="btn small" id="pagesBtn">Pages…</button>
+      <button class="btn primary" id="promoteBtn" ${d.pending.length?"":"disabled"}>↑ Promote ${d.pending.length||""} pending</button></div>
+    <div class="sec"><div class="sec-head"><h3>Pending changes <span class="faint">(not yet in a version — Claude adds these as it works)</span></h3></div>
+      <div class="pending-input"><textarea id="pendIn" rows="2" placeholder="Describe a change… (Ctrl+Enter to add)"></textarea><button class="btn primary" id="pendAdd">+ Add</button></div>
+      <div id="pendList"></div></div>
+    <div id="verList"></div>`;
+  const q=S.vSearch.toLowerCase();
+  const matches=t=>!q||t.toLowerCase().includes(q);
+  // pending
+  $("#pendList").innerHTML = d.pending.length ? d.pending.map((it,i)=>!matches(it.text+" "+(it.pages||[]).map(p=>p.name).join(" "))?"":`
+    <div class="row"><div class="grow"><div class="item-text">${md(it.text)}</div><div style="margin-top:4px">${pgChips(it.pages)}</div></div>
+      <span class="hov"><button class="ibtn" data-ed="${i}">edit</button><button class="ibtn danger" data-del="${i}">✕</button></span></div>`).join("")
+    : `<div class="empty">Nothing pending. Say “build” to Claude when you're ready to promote work into a version.</div>`;
+  $("#pendList").querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{ const it=d.pending[+b.dataset.ed];
+    openModal("Edit pending change",[{id:"t",label:"Change",type:"textarea",value:it.text},{id:"p",label:"Pages affected",type:"pages",value:it.pages}],v=>{ it.text=v.t; it.pages=v.p; save("versions"); renderPanels(); }); });
+  $("#pendList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ if(confirm("Delete this pending change?")){ d.pending.splice(+b.dataset.del,1); save("versions"); renderTabs(); renderPanels(); } });
+  const addPend=()=>{ const t=$("#pendIn").value.trim(); if(!t) return;
+    openModal("Tag pages (optional)",[{id:"p",label:"Pages affected",type:"pages",value:[]}],v=>{ d.pending.unshift({text:t,pages:v.p}); save("versions"); renderTabs(); renderPanels(); }); };
+  $("#pendAdd").onclick=addPend;
+  $("#pendIn").addEventListener("keydown",e=>{ if(e.key==="Enter"&&e.ctrlKey) addPend(); });
+  // version log
+  $("#verList").innerHTML = d.versions.length ? d.versions.map((v,vi)=>{
+    const items=(v.items||[]).filter(it=>matches(v.version+" "+it.text+" "+(it.pages||[]).map(p=>p.name).join(" ")));
+    if(q && !items.length && !matches(v.version)) return "";
+    return `<div class="sec"><div class="sec-head"><span class="vtag">v${esc(v.version)}</span><span class="vmeta">${esc(v.date||"")}</span><span class="grow"></span><span class="vmeta">${(v.items||[]).length} change${(v.items||[]).length===1?"":"s"}</span>
+      <span class="hov" style="display:inline-flex"><button class="ibtn" data-vadd="${vi}">+ item</button></span></div>
+      ${(v.items||[]).map((it,ii)=>`<div class="row"><div class="grow"><div class="item-text">${md(it.text)}</div><div style="margin-top:4px">${pgChips(it.pages)}</div></div>
+        <span class="hov"><button class="ibtn" data-ved="${vi}:${ii}">edit</button><button class="ibtn danger" data-vdel="${vi}:${ii}">✕</button></span></div>`).join("") || `<div class="empty">No recorded changes.</div>`}</div>`;
+  }).join("") : `<div class="empty" style="padding:20px">No versions yet — the first “build” creates one.</div>`;
+  $("#verList").querySelectorAll("[data-vadd]").forEach(b=>b.onclick=()=>{ const v=d.versions[+b.dataset.vadd];
+    openModal("Add item to v"+v.version,[{id:"t",label:"Change",type:"textarea"},{id:"p",label:"Pages affected",type:"pages",value:[]}],x=>{ v.items.push({text:x.t,pages:x.p}); save("versions"); renderPanels(); }); });
+  $("#verList").querySelectorAll("[data-ved]").forEach(b=>b.onclick=()=>{ const [vi,ii]=b.dataset.ved.split(":").map(Number); const it=d.versions[vi].items[ii];
+    openModal("Edit change",[{id:"t",label:"Change",type:"textarea",value:it.text},{id:"p",label:"Pages affected",type:"pages",value:it.pages}],v=>{ it.text=v.t; it.pages=v.p; save("versions"); renderPanels(); }); });
+  $("#verList").querySelectorAll("[data-vdel]").forEach(b=>b.onclick=()=>{ const [vi,ii]=b.dataset.vdel.split(":").map(Number); if(confirm("Delete this change entry?")){ d.versions[vi].items.splice(ii,1); save("versions"); renderPanels(); } });
+  $("#vSearch").oninput=e=>{ S.vSearch=e.target.value; renderPanels(); const inp=$("#vSearch"); inp.focus(); inp.setSelectionRange(inp.value.length,inp.value.length); };
+  $("#pagesBtn").onclick=()=>openModal("Pages / screens (used for tagging)",[{id:"p",label:"One page name per line",type:"textarea",value:(S.data.meta.pages||[]).join("\n")}],v=>{ S.data.meta.pages=v.p.split(/\r?\n/).map(s=>s.trim()).filter(Boolean); save("meta"); toast("Pages updated"); });
+  $("#promoteBtn").onclick=()=>{
+    const cur=S.data.meta.version;
+    openModal(`Promote ${d.pending.length} pending change(s)`,[
+      {id:"seg",label:"Version bump (current: v"+cur+")",type:"select",value:bump(cur,2),options:[{v:bump(cur,2),t:"Patch → v"+bump(cur,2)},{v:bump(cur,1),t:"Feature → v"+bump(cur,1)},{v:bump(cur,0),t:"Phase → v"+bump(cur,0)},{v:"custom",t:"Custom…"}]},
+      {id:"custom",label:"Custom version (only if 'Custom…' chosen)",placeholder:"e.g. 1.0.0"}
+    ],v=>{
+      const nv=v.seg==="custom"?(v.custom.trim()||cur):v.seg;
+      d.versions.unshift({version:nv,date:new Date().toISOString().slice(0,10),items:d.pending.splice(0)});
+      S.data.meta.version=nv;
+      save("versions"); save("meta");
+      toast("Promoted to v"+nv+" — remember: Claude must also bump the in-app version constant");
+      renderHeader(); renderTabs(); renderPanels();
+    });
+  };
+}
+
+/* ---------------- CHECKLIST ---------------- */
+function renderChecklist(P){
+  const d=S.data.checklist;
+  let todo=0,done=0,later=0,removed=0;
+  d.sections.forEach(s=>s.items.forEach(i=>{ if(i.status==="todo")todo++; else if(i.status==="done")done++; else if(i.status==="later")later++; else if(i.status==="removed")removed++; }));
+  const pct=(todo+done)?Math.round(done/(todo+done)*100):0;
+  const F=S.ckFilter;
+  P.innerHTML=`<div class="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <span class="muted" style="font-size:12.5px">${done}/${done+todo} done (${pct}%)</span>
+      ${["all","todo","done","later","removed"].map(f=>`<button class="btn small ${F===f?"primary":""}" data-f="${f}">${f[0].toUpperCase()+f.slice(1)}${f==="later"&&later?` (${later})`:""}</button>`).join("")}
+      <span class="grow" style="flex:1"></span><button class="btn small" id="addCkSec">+ Section</button></div>
+    <div id="ckList"></div>`;
+  P.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{ S.ckFilter=b.dataset.f; renderPanels(); });
+  $("#ckList").innerHTML=d.sections.map((s,si)=>{
+    const items=s.items.map((it,ii)=>({it,ii})).filter(x=>F==="all"?x.it.status!=="removed":x.it.status===F);
+    return `<div class="sec"><div class="sec-head"><h3>${esc(s.title)}</h3><span class="grow"></span>
+      <span class="hov" style="display:inline-flex;gap:4px"><button class="ibtn" data-sadd="${si}">+ item</button><button class="ibtn" data-sed="${si}">rename</button><button class="ibtn danger" data-sdel="${si}">✕</button></span></div>
+      ${items.map(({it,ii})=>`<div class="row ${it.status}"><span class="ck ${it.status==="done"?"on":""}" data-ck="${si}:${ii}">${it.status==="done"?"✓":""}</span>
+        <div class="grow"><div class="item-text">${md(it.text)}</div>${it.detail?`<div class="detail">${md(it.detail)}</div>`:""}${it.status==="later"?`<span class="chip warn" style="margin-top:3px">later</span>`:""}${it.status==="removed"?`<span class="chip bad" style="margin-top:3px">removed</span>`:""}</div>
+        <span class="hov">
+          <button class="ibtn" data-lat="${si}:${ii}" title="Toggle 'later'">⏰</button>
+          <button class="ibtn" data-rem="${si}:${ii}" title="Mark removed (kept for the record)">rm</button>
+          <button class="ibtn" data-ied="${si}:${ii}">edit</button>
+          <button class="ibtn danger" data-idel="${si}:${ii}" title="Delete permanently">✕</button></span></div>`).join("") || `<div class="empty">Nothing here${F!=="all"?" for this filter":""}.</div>`}</div>`;
+  }).join("");
+  const CK=$("#ckList");
+  CK.querySelectorAll("[data-ck]").forEach(b=>b.onclick=()=>{ const [si,ii]=b.dataset.ck.split(":").map(Number); const it=d.sections[si].items[ii]; it.status=it.status==="done"?"todo":"done"; save("checklist"); renderTabs(); renderPanels(); });
+  CK.querySelectorAll("[data-lat]").forEach(b=>b.onclick=()=>{ const [si,ii]=b.dataset.lat.split(":").map(Number); const it=d.sections[si].items[ii]; it.status=it.status==="later"?"todo":"later"; save("checklist"); renderTabs(); renderPanels(); });
+  CK.querySelectorAll("[data-rem]").forEach(b=>b.onclick=()=>{ const [si,ii]=b.dataset.rem.split(":").map(Number); const it=d.sections[si].items[ii]; it.status=it.status==="removed"?"todo":"removed"; save("checklist"); renderTabs(); renderPanels(); });
+  CK.querySelectorAll("[data-ied]").forEach(b=>b.onclick=()=>{ const [si,ii]=b.dataset.ied.split(":").map(Number); const it=d.sections[si].items[ii];
+    openModal("Edit item",[{id:"t",label:"Item",type:"textarea",value:it.text},{id:"d",label:"Detail (optional)",type:"textarea",value:it.detail||""},{id:"s",label:"Status",type:"select",value:it.status,options:[{v:"todo",t:"To do"},{v:"done",t:"Done"},{v:"later",t:"Later"},{v:"removed",t:"Removed"}]}],v=>{ it.text=v.t; it.detail=v.d; it.status=v.s; save("checklist"); renderTabs(); renderPanels(); }); });
+  CK.querySelectorAll("[data-idel]").forEach(b=>b.onclick=()=>{ const [si,ii]=b.dataset.idel.split(":").map(Number); if(confirm("Delete permanently? (Use 'rm' to keep it on record instead.)")){ d.sections[si].items.splice(ii,1); save("checklist"); renderTabs(); renderPanels(); } });
+  CK.querySelectorAll("[data-sadd]").forEach(b=>b.onclick=()=>{ const s=d.sections[+b.dataset.sadd];
+    openModal("Add item to “"+s.title+"”",[{id:"t",label:"Item",type:"textarea"},{id:"d",label:"Detail (optional)",type:"textarea"}],v=>{ if(!v.t.trim())return; s.items.push({text:v.t.trim(),status:"todo",detail:v.d.trim()}); save("checklist"); renderTabs(); renderPanels(); }); });
+  CK.querySelectorAll("[data-sed]").forEach(b=>b.onclick=()=>{ const s=d.sections[+b.dataset.sed];
+    openModal("Rename section",[{id:"t",label:"Title",value:s.title}],v=>{ s.title=v.t||s.title; save("checklist"); renderPanels(); }); });
+  CK.querySelectorAll("[data-sdel]").forEach(b=>b.onclick=()=>{ const si=+b.dataset.sdel; if(confirm("Delete section “"+d.sections[si].title+"” and its items?")){ d.sections.splice(si,1); save("checklist"); renderTabs(); renderPanels(); } });
+  $("#addCkSec").onclick=()=>openModal("New section",[{id:"t",label:"Title"}],v=>{ if(!v.t.trim())return; d.sections.push({title:v.t.trim(),items:[]}); save("checklist"); renderPanels(); });
+}
+
+/* ---------------- FEATURES ---------------- */
+const ST_CYCLE=["todo","partial","done","na"];
+const ST_LABEL={todo:"todo",partial:"~ui",done:"done",na:"n/a"};
+function renderFeatures(P){
+  const d=S.data.features;
+  P.innerHTML=`<div class="sec-head" style="margin-bottom:12px">
+      <span class="muted" style="font-size:12.5px">Click a status to cycle: todo → ~ui (built, logic pending) → done → n/a. Click the tier badge to toggle Free/Premium.</span>
+      <span class="grow"></span><button class="btn small" id="platBtn">Platforms…</button><button class="btn small" id="addGrp">+ Group</button></div>
+    <div id="ftList"></div>`;
+  const plats=d.platforms||[];
+  $("#ftList").innerHTML = d.groups.length ? d.groups.map((g,gi)=>`<div class="sec">
+    <div class="sec-head"><h3>${esc(g.title)}</h3><span class="grow"></span>
+      <span class="hov" style="display:inline-flex;gap:4px"><button class="ibtn" data-radd="${gi}">+ feature</button><button class="ibtn" data-ged="${gi}">rename</button><button class="ibtn danger" data-gdel="${gi}">✕</button></span></div>
+    <table class="ft"><tr><th style="width:34%">Feature</th><th>Tier</th>${plats.map(p=>`<th>${esc(p)}</th>`).join("")}<th>Notes</th><th></th></tr>
+      ${g.rows.map((r,ri)=>`<tr>
+        <td>${esc(r.name)}</td>
+        <td><span class="chip ${r.tier==="premium"?"warn":"dim"} tier" data-tier="${gi}:${ri}">${r.tier==="premium"?"premium":"free"}</span></td>
+        ${plats.map(p=>{const st=(r.status||{})[p]||"todo";return `<td><span class="st ${st}" data-st="${gi}:${ri}:${esc(p)}">${ST_LABEL[st]}</span></td>`;}).join("")}
+        <td class="muted" style="font-size:12.5px">${md(r.notes||"")}</td>
+        <td style="white-space:nowrap"><span class="hov"><button class="ibtn" data-red="${gi}:${ri}">edit</button><button class="ibtn danger" data-rdel="${gi}:${ri}">✕</button></span></td></tr>`).join("")}
+    </table>${g.rows.length?"":'<div class="empty">No features in this group.</div>'}</div>`).join("")
+    : `<div class="empty" style="padding:20px">No feature groups yet — populated during setup from your v1 scope.</div>`;
+  const FT=$("#ftList");
+  FT.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{ const [gi,ri,p]=b.dataset.st.split(":"); const r=d.groups[+gi].rows[+ri]; r.status=r.status||{}; const cur=r.status[p]||"todo"; r.status[p]=ST_CYCLE[(ST_CYCLE.indexOf(cur)+1)%4]; save("features"); renderPanels(); });
+  FT.querySelectorAll("[data-tier]").forEach(b=>b.onclick=()=>{ const [gi,ri]=b.dataset.tier.split(":").map(Number); const r=d.groups[gi].rows[ri]; r.tier=r.tier==="premium"?"free":"premium"; save("features"); renderPanels(); });
+  FT.querySelectorAll("[data-red]").forEach(b=>b.onclick=()=>{ const [gi,ri]=b.dataset.red.split(":").map(Number); const r=d.groups[gi].rows[ri];
+    openModal("Edit feature",[{id:"n",label:"Feature",value:r.name},{id:"no",label:"Notes",type:"textarea",value:r.notes||""}],v=>{ r.name=v.n; r.notes=v.no; save("features"); renderPanels(); }); });
+  FT.querySelectorAll("[data-rdel]").forEach(b=>b.onclick=()=>{ const [gi,ri]=b.dataset.rdel.split(":").map(Number); if(confirm("Delete this feature row?")){ d.groups[gi].rows.splice(ri,1); save("features"); renderPanels(); } });
+  FT.querySelectorAll("[data-radd]").forEach(b=>b.onclick=()=>{ const g=d.groups[+b.dataset.radd];
+    openModal("Add feature to “"+g.title+"”",[{id:"n",label:"Feature"},{id:"no",label:"Notes",type:"textarea"}],v=>{ if(!v.n.trim())return; g.rows.push({name:v.n.trim(),tier:"free",status:{},notes:v.no}); save("features"); renderPanels(); }); });
+  FT.querySelectorAll("[data-ged]").forEach(b=>b.onclick=()=>{ const g=d.groups[+b.dataset.ged];
+    openModal("Rename group",[{id:"t",label:"Title",value:g.title}],v=>{ g.title=v.t||g.title; save("features"); renderPanels(); }); });
+  FT.querySelectorAll("[data-gdel]").forEach(b=>b.onclick=()=>{ const gi=+b.dataset.gdel; if(confirm("Delete group “"+d.groups[gi].title+"”?")){ d.groups.splice(gi,1); save("features"); renderPanels(); } });
+  $("#addGrp").onclick=()=>openModal("New feature group",[{id:"t",label:"Title (e.g. App shell, Home, Settings)"}],v=>{ if(!v.t.trim())return; d.groups.push({title:v.t.trim(),rows:[]}); save("features"); renderPanels(); });
+  $("#platBtn").onclick=()=>openModal("Platforms (table columns)",[{id:"p",label:"One platform per line (e.g. Windows, Android)",type:"textarea",value:plats.join("\n")}],v=>{ d.platforms=v.p.split(/\r?\n/).map(s=>s.trim()).filter(Boolean); save("features"); renderPanels(); });
+}
+
+/* ---------------- PREMIUM ---------------- */
+function listEditor(P,host,title,arr,key,hint){
+  const div=document.createElement("div"); div.className="sec";
+  const render=()=>{
+    div.innerHTML=`<div class="sec-head"><h3>${esc(title)}</h3><span class="grow"></span><button class="ibtn" data-add>+ add</button></div>
+      ${arr.length?arr.map((t,i)=>`<div class="row"><div class="grow item-text">${md(t)}</div><span class="hov"><button class="ibtn" data-ed="${i}">edit</button><button class="ibtn danger" data-del="${i}">✕</button></span></div>`).join(""):`<div class="empty">${esc(hint||"Empty.")}</div>`}`;
+    div.querySelector("[data-add]").onclick=()=>openModal("Add — "+title,[{id:"t",label:"Text",type:"textarea"}],v=>{ if(!v.t.trim())return; arr.push(v.t.trim()); save(key); render(); });
+    div.querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.ed; openModal("Edit",[{id:"t",label:"Text",type:"textarea",value:arr[i]}],v=>{ arr[i]=v.t; save(key); render(); }); });
+    div.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.del; if(confirm("Delete this entry?")){ arr.splice(i,1); save(key); render(); } });
+  };
+  render(); host.appendChild(div);
+}
+function renderPremium(P){
+  const d=S.data.premium;
+  P.innerHTML=`<div class="sec"><div class="sec-head"><h3>Guiding principle</h3><span class="grow"></span><span class="hov" style="display:inline-flex"><button class="ibtn" id="prinEd">edit</button></span></div>
+    <div class="item-text">${md(d.principle)}</div></div>
+    <div id="premLists"></div>
+    <div class="sec"><div class="sec-head"><h3>Premium features <span class="faint">(feature + why it's premium)</span></h3><span class="grow"></span><button class="ibtn" id="premAdd">+ add</button></div><div id="premTable"></div></div>`;
+  $("#prinEd").onclick=()=>openModal("Guiding principle",[{id:"t",label:"Principle",type:"textarea",value:d.principle}],v=>{ d.principle=v.t; save("premium"); renderPanels(); });
+  const host=$("#premLists");
+  listEditor(P,host,"Free tier (the app stands on its own)",d.free,"premium","What free users get. Populated at setup.");
+  const renderPremTable=()=>{
+    $("#premTable").innerHTML = d.premium.length ? `<table class="ft"><tr><th style="width:38%">Feature</th><th>Why premium</th><th></th></tr>
+      ${d.premium.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td class="muted">${md(r.why||"")}</td><td style="white-space:nowrap"><span class="hov"><button class="ibtn" data-ed="${i}">edit</button><button class="ibtn danger" data-del="${i}">✕</button></span></td></tr>`).join("")}</table>` : `<div class="empty">No premium features defined yet.</div>`;
+    $("#premTable").querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{ const r=d.premium[+b.dataset.ed];
+      openModal("Edit premium feature",[{id:"n",label:"Feature",value:r.name},{id:"w",label:"Why it's premium",type:"textarea",value:r.why}],v=>{ r.name=v.n; r.why=v.w; save("premium"); renderPremTable(); }); });
+    $("#premTable").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.del; if(confirm("Delete?")){ d.premium.splice(i,1); save("premium"); renderPremTable(); } });
+  };
+  renderPremTable();
+  $("#premAdd").onclick=()=>openModal("Add premium feature",[{id:"n",label:"Feature"},{id:"w",label:"Why it's premium",type:"textarea"}],v=>{ if(!v.n.trim())return; d.premium.push({name:v.n.trim(),why:v.w}); save("premium"); renderPremTable(); });
+  listEditor(P,host2(),"Gating UX",d.gating,"premium");
+  listEditor(P,host2(),"Pending decisions",d.pending,"premium","Free caps, pricing, trial length, billing provider…");
+  function host2(){ return $("#panels"); }
+}
+
+/* ---------------- COMPETITORS ---------------- */
+const CST_CYCLE=["yes","partial","no"];
+const CST_LABEL={yes:"yes",partial:"±",no:"no"};
+function gradeClass(g){ const c=(g||"")[0]?.toUpperCase(); if(c==="A"||c==="B")return "ok"; if(c==="C")return "warn"; if(c==="D"||c==="E"||c==="F")return "bad"; return "dim"; }
+function renderCompetitors(P){
+  const d=S.data.competitors;
+  P.innerHTML=`<div class="sec-head" style="margin-bottom:12px">
+      <span class="muted" style="font-size:12.5px">Claude proposes competitors during setup and researches each one. Add a name Claude missed with <b>+ Competitor</b> — it gets researched on your next ask.</span>
+      <span class="grow"></span>
+      <button class="btn small" id="cmpSummaryBtn">Summary…</button>
+      <button class="btn primary small" id="cmpAdd">+ Competitor</button></div>
+    ${d.summary?`<div class="sec"><div class="sec-head"><h3>How this comparison was framed</h3></div><div class="item-text">${md(d.summary)}</div></div>`:""}
+    <div id="cmpList"></div>
+    <div class="sec"><div class="sec-head"><h3>Verdict — where our app wins</h3><span class="grow"></span><span class="hov" style="display:inline-flex"><button class="ibtn" id="cmpVerdictBtn">edit</button></span></div>
+      <div class="item-text">${d.verdict?md(d.verdict):'<span class="faint">Written by Claude after the analysis: the gap our app exploits, and what to steal vs. avoid.</span>'}</div></div>`;
+  $("#cmpList").innerHTML = d.competitors.length ? d.competitors.map((c,ci)=>`<div class="sec">
+    <div class="sec-head" style="align-items:flex-start">
+      <span class="grade ${gradeClass(c.grade)}" title="Claude's overall grade vs. our app's goals">${esc(c.grade||"?")}</span>
+      <div class="grow"><h3 style="font-size:15px">${esc(c.name)}</h3>
+        <div class="muted" style="font-size:12.5px;margin-top:1px">${esc(c.tagline||"")}</div>
+        <div class="faint" style="font-size:11.5px;margin-top:3px">${[c.platforms,c.pricing].filter(Boolean).map(esc).join(" · ")}</div>
+        ${c.requested?`<span class="chip warn" style="margin-top:5px">awaiting research — ask Claude to “fill in the competitor analysis”</span>`:""}</div>
+      <span class="hov" style="display:inline-flex;gap:4px"><button class="ibtn" data-cfadd="${ci}">+ feature</button><button class="ibtn" data-ced="${ci}">edit</button><button class="ibtn danger" data-cdel="${ci}">✕</button></span></div>
+    ${(c.features||[]).length?`<table class="ft"><tr><th style="width:30%">Feature (vs. our scope)</th><th style="width:70px">Has it?</th><th>Detail</th><th></th></tr>
+      ${c.features.map((f,fi)=>`<tr><td>${esc(f.name)}</td>
+        <td><span class="st ${f.status||"partial"}" data-cst="${ci}:${fi}" title="Click to cycle yes → ± → no">${CST_LABEL[f.status]||"±"}</span></td>
+        <td class="muted" style="font-size:12.5px">${md(f.detail||"")}</td>
+        <td style="white-space:nowrap"><span class="hov"><button class="ibtn" data-cfed="${ci}:${fi}">edit</button><button class="ibtn danger" data-cfdel="${ci}:${fi}">✕</button></span></td></tr>`).join("")}</table>`:""}
+    ${(c.strengths||[]).length?`<div style="margin-top:10px"><span class="faint" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">Strengths</span><ul class="swlist plus">${c.strengths.map(s=>`<li>${md(s)}</li>`).join("")}</ul></div>`:""}
+    ${(c.weaknesses||[]).length?`<div style="margin-top:8px"><span class="faint" style="font-size:11px;text-transform:uppercase;letter-spacing:.05em">Weaknesses</span><ul class="swlist minus">${c.weaknesses.map(s=>`<li>${md(s)}</li>`).join("")}</ul></div>`:""}
+    ${c.skipIf?`<div class="skipbox"><span class="tag">Their users would switch to us if</span>${md(c.skipIf)}</div>`:""}
+  </div>`).join("") : `<div class="empty" style="padding:20px">No competitor analysis yet. During setup, Claude asks if you want one and proposes the competitor list. You can also add names yourself with <b>+ Competitor</b>.</div>`;
+  const CL=$("#cmpList");
+  CL.querySelectorAll("[data-cst]").forEach(b=>b.onclick=()=>{ const [ci,fi]=b.dataset.cst.split(":").map(Number); const f=d.competitors[ci].features[fi]; f.status=CST_CYCLE[(CST_CYCLE.indexOf(f.status||"partial")+1)%3]; save("competitors"); renderPanels(); });
+  CL.querySelectorAll("[data-cfed]").forEach(b=>b.onclick=()=>{ const [ci,fi]=b.dataset.cfed.split(":").map(Number); const f=d.competitors[ci].features[fi];
+    openModal("Edit feature row",[{id:"n",label:"Feature",value:f.name},{id:"de",label:"Detail",type:"textarea",value:f.detail||""}],v=>{ f.name=v.n; f.detail=v.de; save("competitors"); renderPanels(); }); });
+  CL.querySelectorAll("[data-cfdel]").forEach(b=>b.onclick=()=>{ const [ci,fi]=b.dataset.cfdel.split(":").map(Number); if(confirm("Delete this feature row?")){ d.competitors[ci].features.splice(fi,1); save("competitors"); renderPanels(); } });
+  CL.querySelectorAll("[data-cfadd]").forEach(b=>b.onclick=()=>{ const c=d.competitors[+b.dataset.cfadd];
+    openModal("Add feature row — "+c.name,[{id:"n",label:"Feature"},{id:"de",label:"Detail",type:"textarea"}],v=>{ if(!v.n.trim())return; c.features=c.features||[]; c.features.push({name:v.n.trim(),status:"partial",detail:v.de}); save("competitors"); renderPanels(); }); });
+  CL.querySelectorAll("[data-ced]").forEach(b=>b.onclick=()=>{ const c=d.competitors[+b.dataset.ced];
+    openModal("Edit competitor",[
+      {id:"n",label:"Name",value:c.name},{id:"g",label:"Grade (A+ … F — how well they cover OUR goals)",value:c.grade||""},
+      {id:"t",label:"Tagline / one-line take",value:c.tagline||""},
+      {id:"pl",label:"Platforms",value:c.platforms||""},{id:"pr",label:"Pricing",value:c.pricing||""},
+      {id:"st",label:"Strengths (one per line)",type:"textarea",value:(c.strengths||[]).join("\n")},
+      {id:"wk",label:"Weaknesses (one per line)",type:"textarea",value:(c.weaknesses||[]).join("\n")},
+      {id:"sk",label:"Their users would switch to us if…",type:"textarea",value:c.skipIf||""},
+      {id:"rq",label:"Research status",type:"select",value:c.requested?"requested":"done",options:[{v:"done",t:"Researched"},{v:"requested",t:"Awaiting research by Claude"}]}
+    ],v=>{ c.name=v.n; c.grade=v.g; c.tagline=v.t; c.platforms=v.pl; c.pricing=v.pr;
+      c.strengths=v.st.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      c.weaknesses=v.wk.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      c.skipIf=v.sk; c.requested=v.rq==="requested"; save("competitors"); renderTabs(); renderPanels(); }); });
+  CL.querySelectorAll("[data-cdel]").forEach(b=>b.onclick=()=>{ const ci=+b.dataset.cdel; if(confirm("Delete competitor “"+d.competitors[ci].name+"”?")){ d.competitors.splice(ci,1); save("competitors"); renderTabs(); renderPanels(); } });
+  $("#cmpAdd").onclick=()=>openModal("Add a competitor for Claude to research",[
+      {id:"n",label:"Competitor name"},{id:"no",label:"Anything you know about it (optional)",type:"textarea"}
+    ],v=>{ if(!v.n.trim())return;
+      d.competitors.push({name:v.n.trim(),requested:true,grade:"",tagline:v.no.trim(),platforms:"",pricing:"",features:[],strengths:[],weaknesses:[],skipIf:""});
+      save("competitors"); renderTabs(); renderPanels(); toast("Added — tell Claude to “fill in the competitor analysis”"); });
+  $("#cmpSummaryBtn").onclick=()=>openModal("Comparison framing",[{id:"s",label:"What this analysis compares against (usually: our v1 scope)",type:"textarea",value:d.summary}],v=>{ d.summary=v.s; save("competitors"); renderPanels(); });
+  $("#cmpVerdictBtn").onclick=()=>openModal("Verdict",[{id:"v",label:"Where our app wins / what to steal / what to avoid",type:"textarea",value:d.verdict}],v=>{ d.verdict=v.v; save("competitors"); renderPanels(); });
+}
+
+/* ---------------- DECISIONS ---------------- */
+const DQ_STATUS={answered:{c:"ok",t:"answered"},deferred:{c:"warn",t:"deferred"},open:{c:"dim",t:"open"},"n/a":{c:"dim",t:"n/a"}};
+function renderDecisions(P){
+  const d=S.data.decisions;
+  let a=0,de=0,o=0; d.sections.forEach(s=>s.questions.forEach(q=>{ if(q.status==="answered")a++; else if(q.status==="deferred")de++; else if(q.status==="open")o++; }));
+  P.innerHTML=`<div class="sec-head" style="margin-bottom:12px"><span class="chip ok">${a} answered</span><span class="chip warn">${de} deferred</span><span class="chip dim">${o} open</span>
+    <span class="grow"></span><span class="muted" style="font-size:12px">Deferred/open questions get re-asked by Claude whenever the topic surfaces — until you decide.</span></div>
+    <div id="dqList"></div>`;
+  $("#dqList").innerHTML=d.sections.map((s,si)=>`<div class="sec"><div class="sec-head"><h3>${esc(s.title)}</h3><span class="grow"></span><span class="hov" style="display:inline-flex"><button class="ibtn" data-qadd="${si}">+ question</button></span></div>
+    ${s.questions.map((q,qi)=>{const st=DQ_STATUS[q.status]||DQ_STATUS.open; return `<div class="row" ${q.status==="deferred"||q.status==="open"?'style="border-left:3px solid var(--warn);padding-left:10px"':""}>
+      <div class="grow"><div style="font-size:12.5px" class="muted">${esc(q.q)}</div>
+        <div class="item-text" style="margin-top:2px">${q.answer?md(q.answer):'<span class="faint">—</span>'}</div></div>
+      <span class="chip ${st.c}" style="flex-shrink:0">${st.t}</span>
+      <span class="hov"><button class="ibtn" data-qed="${si}:${qi}">edit</button><button class="ibtn danger" data-qdel="${si}:${qi}">✕</button></span></div>`;}).join("")}</div>`).join("");
+  const DQ=$("#dqList");
+  DQ.querySelectorAll("[data-qed]").forEach(b=>b.onclick=()=>{ const [si,qi]=b.dataset.qed.split(":").map(Number); const q=d.sections[si].questions[qi];
+    openModal("Decision",[{id:"q",label:"Question",value:q.q},{id:"a",label:"Answer",type:"textarea",value:q.answer},{id:"s",label:"Status",type:"select",value:q.status,options:[{v:"answered",t:"Answered"},{v:"deferred",t:"Deferred (ask me again)"},{v:"open",t:"Open (not asked yet)"},{v:"n/a",t:"N/A"}]}],v=>{ q.q=v.q; q.answer=v.a; q.status=v.s; save("decisions"); renderTabs(); renderPanels(); }); });
+  DQ.querySelectorAll("[data-qdel]").forEach(b=>b.onclick=()=>{ const [si,qi]=b.dataset.qdel.split(":").map(Number); if(confirm("Delete this question?")){ d.sections[si].questions.splice(qi,1); save("decisions"); renderTabs(); renderPanels(); } });
+  DQ.querySelectorAll("[data-qadd]").forEach(b=>b.onclick=()=>{ const s=d.sections[+b.dataset.qadd];
+    openModal("New question",[{id:"q",label:"Question"},{id:"a",label:"Answer (optional)",type:"textarea"}],v=>{ if(!v.q.trim())return; s.questions.push({id:"custom."+Date.now(),q:v.q.trim(),status:v.a.trim()?"answered":"open",answer:v.a.trim()}); save("decisions"); renderTabs(); renderPanels(); }); });
+}
+
+/* ---------------- RULES ---------------- */
+function renderRules(P){
+  const d=S.data.rules;
+  P.innerHTML=`<div class="sec-head" style="margin-bottom:12px"><span class="muted" style="font-size:12.5px">Standing orders for the AI on this project. Mirrored in CLAUDE.md — if you edit here, Claude picks it up.</span><span class="grow"></span><button class="btn small" id="addRule">+ Rule</button></div><div id="ruleList"></div>`;
+  $("#ruleList").innerHTML=d.rules.map((r,i)=>`<div class="sec"><div class="sec-head"><h3>${esc(r.title)}</h3><span class="grow"></span>
+    <span class="hov" style="display:inline-flex;gap:4px"><button class="ibtn" data-ed="${i}">edit</button><button class="ibtn danger" data-del="${i}">✕</button></span></div>
+    <div class="item-text">${md(r.body)}</div></div>`).join("") || `<div class="empty">No rules.</div>`;
+  $("#ruleList").querySelectorAll("[data-ed]").forEach(b=>b.onclick=()=>{ const r=d.rules[+b.dataset.ed];
+    openModal("Edit rule",[{id:"t",label:"Title",value:r.title},{id:"b",label:"Rule",type:"textarea",value:r.body}],v=>{ r.title=v.t; r.body=v.b; save("rules"); renderPanels(); }); });
+  $("#ruleList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.del; if(confirm("Delete rule “"+d.rules[i].title+"”?")){ d.rules.splice(i,1); save("rules"); renderPanels(); } });
+  $("#addRule").onclick=()=>openModal("New rule",[{id:"t",label:"Title"},{id:"b",label:"Rule",type:"textarea"}],v=>{ if(!v.t.trim())return; d.rules.push({title:v.t.trim(),body:v.b}); save("rules"); renderPanels(); });
+}
+
+/* ============================ BANNERS / SYNC UI ============================ */
+const KEY_LABEL={meta:"App meta",prd:"PRD",versions:"Versions",checklist:"Checklist",features:"Features",premium:"Premium",competitors:"Competitors",decisions:"Decisions",rules:"Rules"};
+const conflicts=new Set(); let draftKeys=[];
+function renderBanners(){
+  const B=$("#banners"); let html="";
+  if(SyncEngine.mode==="fallback" && !localStorage.getItem("hub_ffwarn")){
+    html+=`<div class="banner warn"><span>⚠</span><div class="grow"><b>This browser can't auto-save to disk.</b> Firefox/Zen don't support the File System Access API. Everything still works: Claude's edits appear live, and your edits buffer here — but you must click <b>Download changed file(s)</b> and drop them into <code>.claude/project/data/</code>. For true auto-save, open this file in <b>Chrome, Edge, or Helium</b>.</div>
+      <div class="btns"><button class="btn small" id="ffOk">Got it — continue anyway</button></div></div>`;
+  }
+  if(SyncEngine.mode==="fs-reconnect"){
+    html+=`<div class="banner"><span>🔌</span><div class="grow">Folder connection found from last time — one click to re-enable auto-save.</div><div class="btns"><button class="btn primary small" id="reconBtn">Reconnect</button></div></div>`;
+  }
+  if(draftKeys.length){
+    html+=`<div class="banner warn"><span>💾</span><div class="grow"><b>Unsaved edits from a previous session:</b> ${draftKeys.map(k=>KEY_LABEL[k]).join(", ")}. Restore them into the page, or discard?</div>
+      <div class="btns"><button class="btn primary small" id="draftRestore">Restore</button><button class="btn small danger" id="draftDiscard">Discard</button></div></div>`;
+  }
+  for(const k of conflicts){
+    html+=`<div class="banner bad"><span>⚔</span><div class="grow"><b>Conflict on ${KEY_LABEL[k]}:</b> the file changed on disk (probably Claude) while you had unsaved edits here.</div>
+      <div class="btns"><button class="btn small" data-cmine="${k}">Keep my edits</button><button class="btn primary small" data-cdisk="${k}">Take disk version</button></div></div>`;
+  }
+  B.innerHTML=html;
+  const ff=$("#ffOk"); if(ff) ff.onclick=()=>{ localStorage.setItem("hub_ffwarn","1"); renderBanners(); };
+  const rc=$("#reconBtn"); if(rc) rc.onclick=()=>SyncEngine.connect();
+  const dr=$("#draftRestore"); if(dr) dr.onclick=()=>{ draftKeys.forEach(k=>SyncEngine.restoreDraft(k)); draftKeys=[]; renderAll(); toast("Drafts restored (unsaved — export or connect to save)"); };
+  const dd=$("#draftDiscard"); if(dd) dd.onclick=()=>{ if(confirm("Discard the previous session's edits?")){ draftKeys.forEach(k=>SyncEngine.discardDraft(k)); draftKeys=[]; renderBanners(); } };
+  B.querySelectorAll("[data-cmine]").forEach(b=>b.onclick=()=>{ conflicts.delete(b.dataset.cmine); SyncEngine.resolveConflict(b.dataset.cmine,"mine"); renderBanners(); });
+  B.querySelectorAll("[data-cdisk]").forEach(b=>b.onclick=()=>{ conflicts.delete(b.dataset.cdisk); SyncEngine.resolveConflict(b.dataset.cdisk,"disk"); renderBanners(); });
+}
+function renderStatus(mode){
+  const p=$("#statusPill"), c=$("#connectBtn");
+  if(mode==="fs"){ p.innerHTML=`<span class="pill ok"><span class="dot" style="background:var(--ok)"></span>Auto-save on</span>`; c.style.display="none"; }
+  else if(mode==="fs-available"){ p.innerHTML=`<span class="pill"><span class="dot" style="background:var(--faint)"></span>Not connected</span>`; c.style.display=""; c.textContent="Connect project folder"; }
+  else if(mode==="fs-reconnect"){ p.innerHTML=`<span class="pill warn"><span class="dot" style="background:var(--warn)"></span>Reconnect needed</span>`; c.style.display=""; c.textContent="Reconnect"; }
+  else { p.innerHTML=`<span class="pill warn"><span class="dot" style="background:var(--warn)"></span>Fallback mode (no auto-save)</span>`; c.style.display="none"; }
+  renderBanners();
+}
+$("#connectBtn").onclick=async()=>{ const ok=await SyncEngine.connect(); if(ok) toast("Connected — auto-save is on"); };
+$("#dlDirtyBtn").onclick=()=>SyncEngine.downloadDirty();
+$("#markSyncBtn").onclick=()=>{ SyncEngine.markExported(); toast("Marked synced"); };
+
+function renderAll(){ renderHeader(); renderTabs(); renderPanels(); renderBanners(); }
+
+/* ============================ BOOT ============================ */
+SyncEngine.init({
+  pageId:"hub", pageRootId:"claude-root", globalVar:"HUB_DATA",
+  rootName:".claude", validateDirs:["project"], pollMs:2500,
+  files: KEYS.map(k=>({key:k, src:"data/"+k+".js", fsPath:["project","data",k+".js"], label:KEY_LABEL[k]})),
+  getLocal:k=>S.data[k],
+  setLocal:(k,v)=>{ S.data[k]=v; },
+  onStatus:renderStatus,
+  onExternal:k=>{ renderAll(); toast(KEY_LABEL[k]+" updated from disk"); },
+  onConflict:k=>{ conflicts.add(k); renderBanners(); },
+  onDirty:keys=>{ $("#dirtyBar").classList.toggle("show", SyncEngine.mode!=="fs" && keys.length>0); $("#dirtyCount").textContent=keys.length; },
+  onDrafts:keys=>{ draftKeys=keys; }
+});
+renderAll();
+</script>
+</body>
+</html>
