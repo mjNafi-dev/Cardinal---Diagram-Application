@@ -4,7 +4,7 @@ window.HUB_DATA["meta"] = /*DATA*/
   "appName": "Cardinal",
   "codename": "Cardinal",
   "tagline": "Offline ERD & EER diagrams and logic circuits whose lines route themselves.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "versionMeaning": "x = major milestone (1 = daily-driver complete) · y = feature release · z = fixes",
   "premiumEnabled": false,
   "pages": [

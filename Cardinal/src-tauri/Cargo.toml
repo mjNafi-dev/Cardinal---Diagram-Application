@@ -1,6 +1,6 @@
 [package]
 name = "cardinal"
-version = "0.2.0"
+version = "0.2.1"
 description = "Cardinal: offline ER diagrams and logic circuits"
 authors = ["Mahir Jabid Nafi"]
 edition = "2021"

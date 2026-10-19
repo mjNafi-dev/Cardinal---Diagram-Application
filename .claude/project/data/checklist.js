@@ -59,7 +59,13 @@ window.HUB_DATA["checklist"] = /*DATA*/
     },
     {
       "title": "Notes for later",
-      "items": []
+      "items": [
+        {
+          "text": "Update popup (option A): check GitHub for a newer release, popup with Update now / Remind me later / Skip this version",
+          "status": "todo",
+          "detail": "Decided 2026-10-19: option A (notify + download the right installer), build later. Still to decide: \"Check for updates\" on or off by default. Must also update the README/About privacy wording (\"never phones home\")."
+        }
+      ]
     },
     {
       "title": "Phase 2 / future",

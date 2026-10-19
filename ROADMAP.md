@@ -65,7 +65,7 @@ Small things that make big diagrams nicer to work on.
 
 ## 💭 Ideas, not planned yet
 
-- Auto-update inside the app
+- **Update popup**: Cardinal tells you when a new version is out (Update now · Remind me later · Skip this version). Planned.
 - Code-signing, so the "unknown publisher" warning goes away (it costs money every year, so not yet)
 
 <sub>This file mirrors the project's internal checklist. Last updated for 0.2.0.</sub>

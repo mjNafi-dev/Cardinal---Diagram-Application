@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, Code2, Table2, Copy, Download, List, Maximize, Minus, Moon, PanelRightClose, PanelRightOpen, Pencil, Plus, Redo2, Settings, SlidersHorizontal, Sun, Trash2, Undo2, Wand2 } from 'lucide-react';
+import { Check, ChevronDown, Code2, Table2, Copy, Download, List, Maximize, Minus, Moon, PanelLeftOpen, PanelRightClose, PanelRightOpen, Pencil, Plus, Redo2, Settings, SlidersHorizontal, Sun, Trash2, Undo2, Wand2 } from 'lucide-react';
 import { useEditor } from '../store/editor';
 import { useLibrary } from '../store/library';
 import { usePrefs } from '../store/prefs';
@@ -193,9 +193,13 @@ export function EditorPage({ diagramId }: { diagramId: string }) {
         setRightTab(rightTab === 'sql' ? 'props' : 'sql'); if (rightTab !== 'sql' && rightW < 400) setRightW(420);
       }} />
       <div className="editor-body">
-        <ToolRail libOpen={libOpen} onToggleLib={toggleLib} onSearch={openSearch} />
-        {libOpen && <ShapesPanel searchRef={searchRef} />}
-        {loaded === 'ok' ? <Canvas /> : <div className="canvas-wrap" />}
+        {libOpen
+          ? <ShapesPanel searchRef={searchRef} onCollapse={toggleLib} />
+          : <button className="left-reopen" title="Show the shape library" aria-label="Show the shape library" onClick={toggleLib}><PanelLeftOpen size={17} /></button>}
+        <div className="canvas-area">
+          {loaded === 'ok' ? <Canvas /> : <div className="canvas-wrap" />}
+          <ToolRail onSearch={openSearch} />
+        </div>
         {!rightOpen && (
           <button className="right-reopen" title="Show the side panel" aria-label="Show the side panel" onClick={() => setRightOpen(true)}><PanelRightOpen size={17} /></button>
         )}

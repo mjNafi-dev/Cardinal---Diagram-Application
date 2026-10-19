@@ -54,7 +54,7 @@ App version lives in `src/version.ts`, `.claude/project/data/meta.js`, `package.
 - `model/catalog.ts`: every library item has a stable `id`. Favorites are stored in prefs as `shape:<id>` / `conn:<id>`.
 - Containers render behind everything, are not routing obstacles, and drag their contents along. Comments and pen strokes (`drawing`) are also not obstacles. Comments are never exported.
 - `editor/fieldParse.ts` + `editor/RowEditor.tsx`: three-cell row editor. `smartParse(cell, text)` spreads a whole typed row across cells. Suggestions cover keys (with explanations), FK candidates from other tables' PKs, common columns and SQL types. Saving a row with a new FK reference adds a PK-row → FK-row line if the tables aren't linked yet.
-- `editor/ToolRail.tsx`: tools are editor-store state (`tool`, `toolOpts` persisted in localStorage). Canvas pointerdown handles note/text/comment placement, pen strokes and the line tool.
+- `editor/ToolRail.tsx`: the floating tool dock (bottom centre of `.canvas-area`, popovers open above the clicked button). Tools are editor-store state (`tool`, `toolOpts` persisted in localStorage). Canvas pointerdown handles note/text/comment placement, pen strokes and the line tool.
 
 ## Logic circuits (Gates section)
 - A diagram is a circuit when `doc.mode === 'circuit'` (`meta.mode` mirrors it for the home cards). ER diagrams leave `mode` unset.

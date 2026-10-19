@@ -4,6 +4,25 @@ window.HUB_DATA["versions"] = /*DATA*/
   "pending": [],
   "versions": [
     {
+      "version": "0.2.1",
+      "date": "2026-10-19",
+      "items": [
+        {
+          "text": "Figma-style **floating tool dock** at the bottom of the canvas (find shape, select, note, text, line, frames, image, pen, comment); popovers open above it. The left rail is gone: the shape library has its own **hide** button in its header (same icon as the right panel) and a slim tab brings it back, so there is one clear control per panel.",
+          "pages": [
+            {
+              "name": "Editor canvas",
+              "type": "edit"
+            },
+            {
+              "name": "Shapes panel",
+              "type": "edit"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.2.0",
       "date": "2026-10-18",
       "items": [

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUpRight, Frame, Image as ImageIcon, MessageSquare, MousePointer2, PanelLeftClose, PanelLeftOpen, PenLine, Search, Shapes, StickyNote, Type } from 'lucide-react';
+import { ArrowUpRight, Frame, Image as ImageIcon, MessageSquare, MousePointer2, PenLine, Search, StickyNote, Type } from 'lucide-react';
 import { useEditor, type Tool } from '../store/editor';
 import { PALETTE, PALETTE_KEYS } from '../model/palette';
 import { SHAPES } from '../model/catalog';
@@ -37,10 +37,12 @@ function Swatch({ k, on, onClick, size = 24 }: { k: ColorKey; on: boolean; onCli
   return <button className={`swatch${on ? ' on' : ''}`} style={{ width: size, height: size, background: bg, borderRadius: 7 }} title={k === 'auto' ? 'Ink' : PALETTE[k as Exclude<ColorKey, 'auto'>].name} onClick={onClick} />;
 }
 
-export function ToolRail({ libOpen, onToggleLib, onSearch }: { libOpen: boolean; onToggleLib: () => void; onSearch: () => void }) {
+/** Floating tool dock at the bottom of the canvas (Figma style). Popovers open above the button that opened them. */
+export function ToolRail({ onSearch }: { onSearch: () => void }) {
   const tool = useEditor((s) => s.tool);
   const opts = useEditor((s) => s.toolOpts);
   const [pop, setPop] = useState<null | 'note' | 'pen' | 'line' | 'frame'>(null);
+  const [popX, setPopX] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const st = useEditor.getState();
@@ -58,28 +60,27 @@ export function ToolRail({ libOpen, onToggleLib, onSearch }: { libOpen: boolean;
     setPop(popover && pop !== popover ? popover : null);
   };
   const btn = (label: string, key: string, icon: React.ReactNode, active: boolean, onClick: () => void) => (
-    <button className={`rail-btn${active ? ' on' : ''}`} title={key ? `${label} (${key})` : label} aria-label={label} onClick={onClick}>{icon}</button>
+    <button className={`rail-btn${active ? ' on' : ''}`} title={key ? `${label} (${key})` : label} aria-label={label}
+      onClick={(e) => { setPopX(e.currentTarget.offsetLeft + e.currentTarget.offsetWidth / 2); onClick(); }}>{icon}</button>
   );
+  const popStyle = (w = 236): React.CSSProperties => ({ left: Math.max(w / 2, popX), width: w });
 
   return (
-    <div className="rail" ref={railRef}>
-      {btn('Search shapes', '/', <Search size={18} />, false, onSearch)}
+    <div className="rail dock" ref={railRef} role="toolbar" aria-label="Tools">
+      {btn('Find a shape to add', 'Ctrl K', <Search size={18} />, false, onSearch)}
       <div className="rail-sep" />
       {btn('Select', 'V', <MousePointer2 size={18} />, tool === 'select', () => pick('select'))}
       {btn('Sticky note', 'N', <StickyNote size={18} />, tool === 'note', () => pick('note', 'note'))}
-      {btn(libOpen ? 'Hide shape library' : 'Show shape library', '', <Shapes size={18} />, libOpen, onToggleLib)}
       {btn('Text', 'T', <Type size={18} />, tool === 'text', () => pick('text'))}
       {btn('Line', 'L', <ArrowUpRight size={18} />, tool === 'line', () => pick('line', 'line'))}
       {btn('Frames & containers', '', <Frame size={18} />, pop === 'frame', () => setPop(pop === 'frame' ? null : 'frame'))}
       {btn('Image', '', <ImageIcon size={18} />, false, () => fileRef.current?.click())}
       {btn('Pen', 'P', <PenLine size={18} />, tool === 'pen', () => pick('pen', 'pen'))}
       {btn('Comment', 'C', <MessageSquare size={18} />, tool === 'comment', () => pick('comment'))}
-      <div className="spacer" />
-      {btn(libOpen ? 'Collapse panel' : 'Expand panel', '', libOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />, false, onToggleLib)}
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) insertImage(f); }} />
 
       {pop === 'note' && (
-        <div className="rail-pop" style={{ top: 92 }}>
+        <div className="rail-pop" style={popStyle()}>
           <div className="menu-label">Sticky note color</div>
           <div className="pop-swatches">
             {PALETTE_KEYS.map((k) => (
@@ -91,7 +92,7 @@ export function ToolRail({ libOpen, onToggleLib, onSearch }: { libOpen: boolean;
         </div>
       )}
       {pop === 'pen' && (
-        <div className="rail-pop" style={{ top: 330 }}>
+        <div className="rail-pop" style={popStyle()}>
           <div className="pen-widths">
             {PEN_WIDTHS.map((w) => (
               <button key={w} className={`pen-w${opts.penWidth === w ? ' on' : ''}`} title={`${w}px`} onClick={() => st.setToolOpts({ penWidth: w })}>
@@ -106,7 +107,7 @@ export function ToolRail({ libOpen, onToggleLib, onSearch }: { libOpen: boolean;
         </div>
       )}
       {pop === 'line' && (
-        <div className="rail-pop" style={{ top: 196 }}>
+        <div className="rail-pop" style={popStyle()}>
           <div className="menu-label">Line</div>
           <div className="seg">
             <button className={opts.lineArrow ? 'on' : ''} onClick={() => st.setToolOpts({ lineArrow: true })}>Arrow</button>
@@ -116,7 +117,7 @@ export function ToolRail({ libOpen, onToggleLib, onSearch }: { libOpen: boolean;
         </div>
       )}
       {pop === 'frame' && (
-        <div className="rail-pop" style={{ top: 230, width: 230, padding: 5 }}>
+        <div className="rail-pop" style={{ ...popStyle(230), padding: 5 }}>
           {FRAME_ITEMS.map((id) => {
             const d = SHAPES.find((s) => s.id === id)!;
             return (

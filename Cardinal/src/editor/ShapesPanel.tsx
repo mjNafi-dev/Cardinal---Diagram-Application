@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Search, Star, StarOff, X, MousePointerClick, Spline, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search, Star, StarOff, X, MousePointerClick, Spline, Plus, PanelLeftClose } from 'lucide-react';
 import { useEditor } from '../store/editor';
 import { usePrefs } from '../store/prefs';
 import { CONNECTORS, SHAPES, equivalents, searchItems, shapeById, connectorById, type ConnectorDef, type ShapeDef, type ShapeGroup } from '../model/catalog';
@@ -178,7 +178,7 @@ const LOGIC_SECTIONS: { id: ShapeGroup; title: string }[] = [
 const LOGIC_GROUPS = new Set<string>(LOGIC_SECTIONS.map((g) => g.id));
 const ER_GROUPS = new Set<string>(['crowsfoot', 'chen']);
 
-export function ShapesPanel({ searchRef }: { searchRef?: React.RefObject<HTMLInputElement> }) {
+export function ShapesPanel({ searchRef, onCollapse }: { searchRef?: React.RefObject<HTMLInputElement>; onCollapse?: () => void }) {
   const circuit = useEditor((s) => s.doc.mode === 'circuit');
   const notation = useEditor((s) => s.panelNotation);
   const setNotation = useEditor((s) => s.setPanelNotation);
@@ -242,7 +242,10 @@ export function ShapesPanel({ searchRef }: { searchRef?: React.RefObject<HTMLInp
   return (
     <aside className="side lib" style={{ width: 296 }}>
       <div className="side-head">
-        {circuit ? <div className="lib-title">Logic circuit parts</div> : <NotationToggle value={notation} onChange={setNotation} />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>{circuit ? <div className="lib-title">Logic circuit parts</div> : <NotationToggle value={notation} onChange={setNotation} />}</div>
+          {onCollapse && <button className="icon-btn sm" title="Hide the shape library" aria-label="Hide the shape library" onClick={onCollapse}><PanelLeftClose size={15} /></button>}
+        </div>
         <div className="search">
           <Search size={15} />
           <input
